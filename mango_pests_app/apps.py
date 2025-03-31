@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class FrontendConfig(AppConfig):
+class mango_pests_appConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'frontend'
+    name = 'mango_pests_app'
