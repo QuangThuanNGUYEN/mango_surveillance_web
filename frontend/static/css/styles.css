@@ -1,0 +1,30 @@
+/* Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Oswald:wght@200..700&family=Outfit:wght@100..900&display=swap');
+
+/* Font & Styles */
+body {
+    font-family: 'Oswald', sans-serif;
+    margin: 50px;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    align-items: flex-start; 
+    flex-direction: column;  
+}
+
+/* Heading */
+h1 {
+    position: absolute;
+    top: 5px;
+    left: 135px;
+}
+
+/* Mango Image */
+.mango-image {
+    position: absolute;
+    top: -40px;
+    left: 10px;
+    width: 130px;
+}

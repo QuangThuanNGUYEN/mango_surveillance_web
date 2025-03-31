@@ -1,9 +1,23 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Page Title</title>
+    <title>Centre for Mango Pests and Diseases</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
 </head>
 <body>
-    <h1>This is a blank page</h1>
+    <h1>Centre for Mango Pests and Diseases</h1>
+    
+    <img src="{% static 'images/mango.png' %}" alt="Mango Image" class="mango-image">
+    
+    <ul>
+        {% for pest in pests_and_diseases %}
+            <li>
+                <h2>{{ pest.name }}</h2>
+                <p>{{ pest.description }}</p>
+                <img src="{{ pest.image_url }}" alt="{{ pest.name }}">
+            </li>
+        {% endfor %}
+    </ul>
 </body>
 </html>
