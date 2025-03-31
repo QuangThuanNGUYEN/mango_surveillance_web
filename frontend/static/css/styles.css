@@ -1,30 +1,77 @@
 /* Google Font */
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Oswald:wght@200..700&family=Outfit:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Lilita+One&display=swap" rel="stylesheet');
 
-/* Font & Styles */
+/* Banner */
+.banner {
+    position: absolute;
+    top: 0px;
+    background-color: #fff07e;
+    width: 100%;
+    padding: 70px 0;
+    text-align: center;
+    font-size: 2em;
+    font-weight: bold;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3); 
+}
+/* Body */
 body {
-    font-family: 'Oswald', sans-serif;
-    margin: 50px;
+    font-family: sans-serif;
+    margin: 0;
     padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
     align-items: flex-start; 
-    flex-direction: column;  
+    flex-direction: column;
+    background-color: #cc7503;
 }
-
-/* Heading */
-h1 {
-    position: absolute;
-    top: 5px;
-    left: 135px;
-}
-
 /* Mango Image */
 .mango-image {
     position: absolute;
     top: -40px;
-    left: 10px;
-    width: 130px;
+    left: -5px;
+    width: 170px;
+}
+/* Banner Text */
+h1 {
+    position: absolute;
+    top: 10px;
+    left: 150px;
+    color: #0fa801;
+    font-style: bold;
+    font-family: 'Archivo Black', sans-serif; 
+    letter-spacing: 1px;
+    font-size: 45px;
+}
+h2 {
+    position: absolute;
+    top: 63px;
+    left: 1400px;
+    color: #0fa801;
+    font-family: 'Archivo Black', sans-serif; 
+    font-weight: bold;
+    letter-spacing: 1px;
+    font-size: 30px;
+}
+h3 {
+    position: absolute;
+    top: 60px;
+    left: 1170px;
+    color: #0fa801;
+    font-family: 'Archivo Black', sans-serif; 
+    font-weight: bold;
+    letter-spacing: 1px;
+    font-size: 30px;
+}
+.aboutus-image {
+    position: relative;
+    max-width: 300px;  
+    width: 100%;  
+    height: auto;
+    top: 600px;
+}
+
+.aboutus-images li {
+    margin-bottom: 60px; 
 }

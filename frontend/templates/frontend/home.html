@@ -2,22 +2,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Centre for Mango Pests and Diseases</title>
+    <title>WMO - World Mango Organisation</title>
     <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
 </head>
 <body>
-    <h1>Centre for Mango Pests and Diseases</h1>
+    <div class="banner"></div>
     
     <img src="{% static 'images/mango.png' %}" alt="Mango Image" class="mango-image">
-    
-    <ul>
-        {% for pest in pests_and_diseases %}
-            <li>
-                <h2>{{ pest.name }}</h2>
-                <p>{{ pest.description }}</p>
-                <img src="{{ pest.image_url }}" alt="{{ pest.name }}">
-            </li>
-        {% endfor %}
-    </ul>
+
+    <h1>
+        <a href="{% url 'home' %}" style="text-decoration: none; color: inherit;">
+            World Mango Organisation
+        </a>
+    </h1>
+
+    <h2>
+        <a href="{% url 'project_list' %}" style="text-decoration: none; color: inherit;">
+            Mango Pests & Diseases
+        </a>
+    </h2>
+
+    <h3>
+        <a href="{% url 'about' %}" style="text-decoration: none; color: inherit;">
+            About Us
+        </a>
+    </h3>
 </body>
 </html>
