@@ -3,10 +3,26 @@
 {% load static %}
 
 {% block content %}
-<ul class="aboutus-images">
-    <li><img src="{% static 'images/aboutmitchell.png' %}" alt="Mitchell Image" class="aboutus-image"></li>
-    <li><img src="{% static 'images/aboutbenjamin.png' %}" alt="Benjamin Image" class="aboutus-image"></li>
-    <li><img src="{% static 'images/aboutquang.png' %}" alt="Quang Image" class="aboutus-image"></li>
-    <li><img src="{% static 'images/aboutspencer.png' %}" alt="Spencer Image" class="aboutus-image"></li>
-</ul>
+<div class="aboutus-container">
+    <div class="aboutus-item">
+        <img src="{% static 'images/aboutmitchell.png' %}" alt="Mitchell Image" class="aboutus-image">
+        <div class="aboutus-name">Mitchell Danks</div>
+        <div class="aboutus-subname">S320289</div>
+    </div>
+    <div class="aboutus-item">
+        <img src="{% static 'images/aboutbenjamin.png' %}" alt="Benjamin Image" class="aboutus-image">
+        <div class="aboutus-name">Benjamin Denison-Love</div>
+        <div class="aboutus-subname">S330803</div>
+    </div>
+    <div class="aboutus-item">
+        <img src="{% static 'images/aboutquang.png' %}" alt="Quang Image" class="aboutus-image">
+        <div class="aboutus-name">Quang Thuan Nguyen</div>
+        <div class="aboutus-subname">S370553</div>
+    </div>
+    <div class="aboutus-item">
+        <img src="{% static 'images/aboutspencer.png' %}" alt="Spencer Image" class="aboutus-image">
+        <div class="aboutus-name">Spencer Siu</div>
+        <div class="aboutus-subname">S344930</div>
+    </div>
+</div>
 {% endblock %}

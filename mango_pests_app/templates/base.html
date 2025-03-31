@@ -5,6 +5,11 @@
     <title>{% block title %}WMO - World Mango Organisation{% endblock %}</title>
     <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
 </head>
+<header>
+    {% block header %}
+        <h4>{{ page_title }}</h4>
+    {% endblock %}
+</header>
 <body>
     <div class="banner"></div>
 
