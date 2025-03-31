@@ -1,39 +1,12 @@
+{% extends 'base.html' %}
+
 {% load static %}
-<!DOCTYPE html>
-<html>
-<head>
-    <title>WMO - World Mango Organisation</title>
-    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
-</head>
-<body>
-    <div class="banner"></div>
-    
-    <img src="{% static 'images/mango.png' %}" alt="Mango Image" class="mango-image">
 
-    <h1>
-        <a href="{% url 'home' %}" style="text-decoration: none; color: inherit;">
-            World Mango Organisation
-        </a>
-    </h1>
-
-    <h2>
-        <a href="{% url 'project_list' %}" style="text-decoration: none; color: inherit;">
-            Mango Pests & Diseases
-        </a>
-    </h2>
-
-    <h3>
-        <a href="{% url 'about' %}" style="text-decoration: none; color: inherit;">
-            About Us
-        </a>
-    </h3>
-    
-    <ul class="aboutus-images">
-        <li><img src="{% static 'images/aboutmitchell.png' %}" alt="Mitchell Image" class="aboutus-image"></li>
-        <li><img src="{% static 'images/aboutbenjamin.png' %}" alt="Benjamin Image" class="aboutus-image"></li>
-        <li><img src="{% static 'images/aboutquang.png' %}" alt="Quang Image" class="aboutus-image"></li>
-        <li><img src="{% static 'images/aboutspencer.png' %}" alt="Spencer Image" class="aboutus-image"></li>
-    </ul>
-    
-</body>
-</html>
+{% block content %}
+<ul class="aboutus-images">
+    <li><img src="{% static 'images/aboutmitchell.png' %}" alt="Mitchell Image" class="aboutus-image"></li>
+    <li><img src="{% static 'images/aboutbenjamin.png' %}" alt="Benjamin Image" class="aboutus-image"></li>
+    <li><img src="{% static 'images/aboutquang.png' %}" alt="Quang Image" class="aboutus-image"></li>
+    <li><img src="{% static 'images/aboutspencer.png' %}" alt="Spencer Image" class="aboutus-image"></li>
+</ul>
+{% endblock %}

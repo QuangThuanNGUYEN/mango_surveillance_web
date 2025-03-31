@@ -1,31 +1,7 @@
-{% load static %}
-<!DOCTYPE html>
-<html>
-<head>
-    <title>WMO - World Mango Organisation</title>
-    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
-</head>
-<body>
-    <div class="banner"></div>
-    
-    <img src="{% static 'images/mango.png' %}" alt="Mango Image" class="mango-image">
+{% extends 'base.html' %}
 
-    <h1>
-        <a href="{% url 'home' %}" style="text-decoration: none; color: inherit;">
-            World Mango Organisation
-        </a>
-    </h1>
+{% block title %}Home - WMO{% endblock %}
 
-    <h2>
-        <a href="{% url 'project_list' %}" style="text-decoration: none; color: inherit;">
-            Mango Pests & Diseases
-        </a>
-    </h2>
+{% block content %}
 
-    <h3>
-        <a href="{% url 'about' %}" style="text-decoration: none; color: inherit;">
-            About Us
-        </a>
-    </h3>
-</body>
-</html>
+{% endblock %}
