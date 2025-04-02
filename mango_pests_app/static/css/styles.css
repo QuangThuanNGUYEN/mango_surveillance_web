@@ -92,20 +92,19 @@ h4 {
 
 /* About Us Page */
 .aboutus-container {
-    display: flex;  
-    justify-content: center;  
-    align-items: center;  
-    flex-wrap: wrap;  
-    gap: 60px;  
-    margin-top: 50px; 
-    margin-left: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 60px;
+    margin-top: 50px;
 }
 
 .aboutus-item {
-    display: fixed;
-    flex-direction: column; 
-    align-items: center; 
-    text-align: center;  
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
 }
 
 /* About Us Images */
@@ -116,26 +115,22 @@ h4 {
 }
 
 /* About Us Names */
-.aboutus-name {
-    font-family: 'Archivo Black', sans-serif;
-    font-size: 20px; 
-    color: #000000;
-    margin-top: 10px;  
-}
-
-/* About Us SIDs */
+.aboutus-name,
 .aboutus-subname {
     font-family: 'Archivo Black', sans-serif;
-    font-size: 18px; 
-    color: #000000; 
-    margin-top: 5px;  
+    color: #000;
 }
 
-.aboutus-images, .aboutus-names {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
+.aboutus-name {
+    font-size: 20px;
+    margin-top: 10px;
 }
+
+.aboutus-subname {
+    font-size: 18px;
+    margin-top: 5px;
+}
+
 /* D&P Page */
 .project_list-container {
     justify-content: center;
