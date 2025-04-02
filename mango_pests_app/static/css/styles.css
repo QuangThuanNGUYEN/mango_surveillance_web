@@ -40,7 +40,7 @@ body {
 
 /* Banner Text */
 h1 {
-    position: absolute;
+    position: fixed;
     top: 10px;
     left: 150px;
     color: #0fa801;
@@ -51,7 +51,7 @@ h1 {
 }
 
 h2 {
-    position: absolute;
+    position: fixed;
     top: 65px;
     left: 1300px;
     color: #0fa801;
@@ -62,7 +62,7 @@ h2 {
 }
 
 h3 {
-    position: absolute;
+    position: fixed;
     top: 60px;
     left: 1800px;
     color: #0fa801;
@@ -137,13 +137,6 @@ h4 {
     padding: 0;
 }
 /* D&P Page */
-.project_list-container {
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 80px;
-}
-
 .projectlist-item {
     display: flex;
     flex-direction: column;
@@ -174,7 +167,6 @@ h4 {
 }
 
 .project_list-container, .projectlist-item {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
+    margin-left: 450px;
+    margin-top: 60px;
 }
