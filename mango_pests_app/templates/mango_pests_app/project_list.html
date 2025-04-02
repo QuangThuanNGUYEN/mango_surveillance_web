@@ -9,7 +9,9 @@
     {% for project in projects %}
     <div class="projectlist-item">
         <img src="{% static 'images/'|add:project.image %}" alt="{{ project.name }}" class="project_list-image">
-        <div class="dpname">{{ project.name }}</div>
+        <div class="dpname">
+            <a href="{% url 'project_details' project.name %}">{{ project.name }}</a>
+        </div>
         <div class="dpdesc">{{ project.description }}</div>
     </div>
     {% endfor %}

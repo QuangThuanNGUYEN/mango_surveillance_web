@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}{{ project.name }} - Details{% endblock %}
+
+{% block content %}
+<div class="project-detail-container">
+    <img src="{% static 'images/'|add:project.image %}" alt="{{ project.name }}" class="project-detail-image">
+    <p>{{ project.description }}</p>
+    <div>{{ project.details }}</div>
+</div>
+{% endblock %}
