@@ -6,40 +6,12 @@
 
 {% block content %}
 <div class="project_list-container">
+    {% for project in projects %}
     <div class="projectlist-item">
-        <img src="{% static 'images/mangodp1.png' %}" alt="MANGOD&P1" class="project_list-image">
-        <div class="dpname">P&D NAME HERE</div>
-        <div class="dpdesc">P&D DESC HERE</div>
+        <img src="{% static 'images/'|add:project.image %}" alt="{{ project.name }}" class="project_list-image">
+        <div class="dpname">{{ project.name }}</div>
+        <div class="dpdesc">{{ project.description }}</div>
     </div>
-    <div class="projectlist-item">
-        <img src="{% static 'images/mangodp2.png' %}" alt="MANGOD&P2" class="project_list-image">
-        <div class="dpname">P&D NAME HERE</div>
-        <div class="dpdesc">P&D DESC HERE</div>
-    </div>
-    <div class="projectlist-item">
-        <img src="{% static 'images/mangodp3.png' %}" alt="MANGOD&P3" class="project_list-image">
-        <div class="dpname">P&D NAME HERE</div>
-        <div class="dpdesc">P&D DESC HERE</div>
-    </div>
-    <div class="projectlist-item">
-        <img src="{% static 'images/mangodp4.png' %}" alt="MANGOD&P4" class="project_list-image">
-        <div class="dpname">P&D NAME HERE</div>
-        <div class="dpdesc">P&D DESC HERE</div>
-    </div>
-    <div class="projectlist-item">
-        <img src="{% static 'images/mangodp5.png' %}" alt="MANGOD&P5" class="project_list-image">
-        <div class="dpname">P&D NAME HERE</div>
-        <div class="dpdesc">P&D DESC HERE</div>
-    </div>
-    <div class="projectlist-item">
-        <img src="{% static 'images/mangodp6.png' %}" alt="MANGOD&P6" class="project_list-image">
-        <div class="dpname">P&D NAME HERE</div>
-        <div class="dpdesc">P&D DESC HERE</div>
-    </div>
-    <div class="projectlist-item">
-        <img src="{% static 'images/mangodp7.png' %}" alt="MANGOD&P7" class="project_list-image">
-        <div class="dpname">P&D NAME HERE</div>
-        <div class="dpdesc">P&D DESC HERE</div>
-    </div>
+    {% endfor %}
 </div>
 {% endblock %}

@@ -32,7 +32,7 @@ body {
 /* Banner Elements */
 /* Mango Image */
 .mango-image {
-    position: absolute;
+    position: fixed;
     top: -40px;
     left: -5px;
     width: 170px;
@@ -92,19 +92,20 @@ h4 {
 
 /* About Us Page */
 .aboutus-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 60px;
-    margin-top: 50px;
+    display: flex;  
+    justify-content: center;  
+    align-items: center;  
+    flex-wrap: wrap;  
+    gap: 60px;  
+    margin-top: 50px; 
+    margin-left: 400px;
 }
 
 .aboutus-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+    display: fixed;
+    flex-direction: column; 
+    align-items: center; 
+    text-align: center;  
 }
 
 /* About Us Images */
@@ -115,22 +116,26 @@ h4 {
 }
 
 /* About Us Names */
-.aboutus-name,
+.aboutus-name {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 20px; 
+    color: #000000;
+    margin-top: 10px;  
+}
+
+/* About Us SIDs */
 .aboutus-subname {
     font-family: 'Archivo Black', sans-serif;
-    color: #000;
+    font-size: 18px; 
+    color: #000000; 
+    margin-top: 5px;  
 }
 
-.aboutus-name {
-    font-size: 20px;
-    margin-top: 10px;
+.aboutus-images, .aboutus-names {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
 }
-
-.aboutus-subname {
-    font-size: 18px;
-    margin-top: 5px;
-}
-
 /* D&P Page */
 .project_list-container {
     justify-content: center;
