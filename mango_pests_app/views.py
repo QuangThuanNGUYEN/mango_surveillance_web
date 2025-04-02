@@ -5,13 +5,13 @@ def home(request):
 
 def project_list(request):
     projects = [
-        {'name': 'Project 1', 'description': 'Description of Project 1', 'image': 'mangodp1.png'},
-        {'name': 'Project 2', 'description': 'Description of Project 2', 'image': 'mangodp2.png'},
-        {'name': 'Project 3', 'description': 'Description of Project 3', 'image': 'mangodp3.png'},
-        {'name': 'Project 4', 'description': 'Description of Project 4', 'image': 'mangodp4.png'},
-        {'name': 'Project 5', 'description': 'Description of Project 5', 'image': 'mangodp5.png'},
-        {'name': 'Project 6', 'description': 'Description of Project 6', 'image': 'mangodp6.png'},
-        {'name': 'Project 7', 'description': 'Description of Project 7', 'image': 'mangodp7.png'},
+        {'name': 'Anthracnose', 'description': 'Description of Project 1', 'image': 'Anthracnose.png'},
+        {'name': 'Bacterial Black Spot', 'description': 'Description of Project 2', 'image': 'bacterialblackspot.png'},
+        {'name': 'Mango Scab', 'description': 'Description of Project 3', 'image': 'mangoscab.png'},
+        {'name': 'Mango Scale', 'description': 'Description of Project 4', 'image': 'mangoscale.png'},
+        {'name': 'Fruit Fly', 'description': 'Description of Project 5', 'image': 'fruitfly.png'},
+        {'name': 'Mango Leafhoppers', 'description': 'Description of Project 6', 'image': 'mangoleafhopper.png'},
+        {'name': 'Mango Seed Weevil', 'description': 'Description of Project 7', 'image': 'seedweevil.png'},
     ]
     return render(request, 'mango_pests_app/project_list.html', {'page_title': 'Diseases & Pests', 'projects': projects})
 
