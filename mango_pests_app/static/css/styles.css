@@ -8,7 +8,7 @@
     left: 0;
     background-color: #fff07e;
     width: 100%;
-    padding: 70px 0;
+    padding: 7vh 0; 
     text-align: center;
     font-size: 2em;
     font-weight: bold;
@@ -23,7 +23,6 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
     align-items: flex-start; 
     flex-direction: column;
     background-color: #cc7503;
@@ -33,76 +32,70 @@ body {
 /* Mango Image */
 .mango-image {
     position: fixed;
-    top: -40px;
-    left: -5px;
-    width: 170px;
+    top: -8vh;
+    left: 0vw;
+    width: 10vw; 
 }
 
 /* Banner Text */
 h1 {
     position: fixed;
-    top: 10px;
-    left: 150px;
+    top: 1vh; 
+    left: 9vw; 
     color: #0fa801;
     font-style: bold;
     font-family: 'Archivo Black', sans-serif; 
     letter-spacing: 1px;
-    font-size: 45px;
+    font-size: 2vw;
 }
 
 h2 {
     position: fixed;
-    top: 65px;
-    left: 1300px;
+    top: 4vh; 
+    left: 52vw;
     color: #0fa801;
     font-family: 'Archivo Black', sans-serif; 
     font-weight: bold;
     letter-spacing: 1px;
-    font-size: 30px;
+    font-size: 2vw; 
 }
 
 h3 {
     position: fixed;
-    top: 60px;
-    left: 1800px;
+    top: 3.3vh; 
+    left: 85vw; 
     color: #0fa801;
     font-family: 'Archivo Black', sans-serif; 
     font-weight: bold;
     letter-spacing: 1px;
-    font-size: 30px;
+    font-size: 2vw;
 }
 
-/* Dynamic Page Title */
 h4 {
-    position: fixed;
-    top: 200px;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    position: absolute;
+    left: 50%; 
+    top: 20vh; 
+    transform: translateX(-50%);  
     color: #1aff00;
     font-family: 'Archivo Black', sans-serif;
     font-weight: bold;
-    letter-spacing: 1px;
-    font-size: 50px;
-    text-shadow:  
-        -2px -2px 0 black,  
-        2px -2px 0 black,  
-        -2px 2px 0 black,  
-        2px 2px 0 black;
+    font-size: 3vw;
 }
+
 
 /* About Us Page */
 .aboutus-container {
     display: flex;  
     justify-content: center;  
     align-items: center;  
-    flex-wrap: wrap;  
-    gap: 60px;  
-    margin-top: 50px; 
-    margin-left: 400px;
+    flex-wrap: wrap; 
+    gap: 10vw; 
+    margin-top: 45vh; 
+    margin-left: 5vw;
 }
 
 .aboutus-item {
-    display: fixed;
+    display: flex;
     flex-direction: column; 
     align-items: center; 
     text-align: center;  
@@ -110,7 +103,7 @@ h4 {
 
 /* About Us Images */
 .aboutus-image {
-    max-width: 300px;
+    max-width: 15vw; 
     width: 100%;
     height: auto;
 }
@@ -118,17 +111,17 @@ h4 {
 /* About Us Names */
 .aboutus-name {
     font-family: 'Archivo Black', sans-serif;
-    font-size: 20px; 
+    font-size: 1vw; 
     color: #000000;
-    margin-top: 10px;  
+    margin-top: 1vh;
 }
 
 /* About Us SIDs */
 .aboutus-subname {
     font-family: 'Archivo Black', sans-serif;
-    font-size: 18px; 
+    font-size: 1.5vw; 
     color: #000000; 
-    margin-top: 5px;  
+    margin-top: 0.5vh; 
 }
 
 .aboutus-images, .aboutus-names {
@@ -136,6 +129,7 @@ h4 {
     margin: 0;
     padding: 0;
 }
+
 /* D&P Page */
 .projectlist-item {
     display: flex;
@@ -145,28 +139,29 @@ h4 {
 }
 
 .project_list-image {
-    max-width: 300px;
+    max-width: 20vw;
     width: 100%;
     height: auto;
 }
 
 .dpname {
     font-family: 'Archivo Black', sans-serif;
-    font-size: 20px;
+    font-size: 2vw; 
     color: #000000;
-    margin-top: 10px;
+    margin-top: 1vh;
 }
 
 .dpdesc {
     font-family: 'Arial', sans-serif;
-    font-size: 16px;
+    font-size: 1.5vw; 
     color: #333333;
-    margin-top: 5px;
-    max-width: 280px;
+    margin-top: 0.5vh; 
+    max-width: 20vw; 
     text-align: center;
 }
 
 .project_list-container, .projectlist-item {
-    margin-left: 450px;
-    margin-top: 60px;
+    margin-left: 20vw; 
+    margin-top: 23vh; 
+    margin-bottom: 2vh;
 }

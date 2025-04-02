@@ -13,26 +13,24 @@
 <body>
     <div class="banner"></div>
 
-    <img src="{% static 'images/mango.png' %}" alt="Mango Image" class="mango-image">
-
+    <a href="{% url 'home' %}">
+        <img src="{% static 'images/mango.png' %}" alt="Mango Image" class="mango-image">
+    </a>
     <h1>
         <a href="{% url 'home' %}" style="text-decoration: none; color: inherit;">
             World Mango Organisation
         </a>
     </h1>
-
     <h2>
         <a href="{% url 'project_list' %}" style="text-decoration: none; color: inherit;">
             Mango Pests & Diseases
         </a>
     </h2>
-
     <h3>
         <a href="{% url 'about' %}" style="text-decoration: none; color: inherit;">
             About Us
         </a>
     </h3>
-
     {% block content %}{% endblock %}
 </body>
 </html>
