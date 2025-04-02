@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from .data import projects
+from .data import projects #lets you call the project details inside data.py
 
 # Home page 
 def home(request):
