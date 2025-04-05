@@ -165,3 +165,12 @@ h4 {
     margin-top: 23vh; 
     margin-bottom: 2vh;
 }
+
+.content-box {
+    background-color: white;
+    margin: 50px auto;
+    padding: 30px;
+    max-width: 800px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+}
