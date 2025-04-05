@@ -3,7 +3,16 @@ from .data import projects #lets you call the project details inside data.py
 
 # Home page 
 def home(request):
+    page_title = "home"
+    homepage_content = {
+        'heading': "Welcome to the World Mango Organisation!",
+        'description': "We are dedicated to combating mango pests and diseases through research and awareness. Browse our site to learn more!"
+    }
     return render(request, 'mango_pests_app/home.html', {'page_title': 'Home'})
+
+# Project Welcome
+
+
 
 # Project List
 # def project_list(request):
