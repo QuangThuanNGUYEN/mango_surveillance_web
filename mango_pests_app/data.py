@@ -6,6 +6,8 @@ from .mango_threat import MangoThreat
 
 # List of MangoThreat instances
 # List of MangoThreat instances with threat_type
+
+#Ben Note to self: update description= "Description of Project #" with appropriate information.
 mango_threats = [
     MangoThreat(name='Anthracnose', slug='anthracnose', description='Description of Project 1', image='Anthracnose.png', details='Full details of Anthracnose', threat_type='Disease'),
     MangoThreat(name='Bacterial Black Spot', slug='bacterial-black-spot', description='Description of Project 2', image='bacterialblackspot.png', details='Full details of Bacterial Black Spot', threat_type='Disease'),
