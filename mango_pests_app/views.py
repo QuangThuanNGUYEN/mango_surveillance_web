@@ -5,8 +5,8 @@ from .data import mango_threats # lets you call the threat details inside data.p
 def home(request):
     page_title = "home"
     homepage_content = {
-        'heading': "Welcome to the World Mango Organisation of Group-28 of HIT237!",
-        'description': "We are dedicated to combating mango pests and diseases through research and awareness. Browse our site to learn more about the pests that are consuming our beloved mangos!"
+        'heading': "Welcome to Group 28's HIT237 assessment website",
+        'description': "Welcome to Group 28's HIT237 Assessment 2 Website. Here you will find information about the insects, bugs, and diseases affecting the local mango industry. As part of the assessment, this website was coded using Django as instructed in class as a collaborative effort. We hope you find this informative."
     }
     return render(request, 'mango_pests_app/home.html', {'page_title': 'Home'})
 

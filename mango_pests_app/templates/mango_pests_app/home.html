@@ -1,21 +1,15 @@
 {% extends 'base.html' %}
 
-{% block title %}Home - WMO{% endblock %}
+{% load static %}
 
 {% block content %}
-<div class="top-bar">
-    <button>Home</button>
-    <button>About</button>
-    <button>Project Details</button>
-    <button>Project List</button>
-</div>
 
 <div class="content-box">
     <h1>{{ homepage_content.heading }}</h1>
     <p>{{ homepage_content.description }}</p>
 </div>
-{% endblock %}
 
+{% endblock %}
 <!--Note to self. put mango image background. centre top bar for buttons. centre content block for text. 
 Recode content block to not be hard coded. refer to paper prototype design.-->
 <!--Leave design for now. interfears with other stuff too much. hardcode then translate into django.-->
