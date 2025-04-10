@@ -1,36 +1,54 @@
-from django.shortcuts import render, get_object_or_404
-from .data import mango_threats # lets you call the threat details inside data.py
+# views.py
 
-# Home page 
-def home(request):
-    page_title = "home"
-    homepage_content = {
-        'heading': "Welcome to the World Mango Organisation of Group-28 of HIT237!",
-        'description': "We are dedicated to combating mango pests and diseases through research and awareness. Browse our site to learn more about the pests that are consuming our beloved mangos!"
-    }
-    return render(request, 'mango_pests_app/home.html', {'page_title': 'Home'})
+from django.views.generic import TemplateView, View
+from django.shortcuts import render
+from .data import mango_threats
 
 
-# Threats List
-def project_list(request):
-    return render(request, 'mango_pests_app/project_list.html', {'page_title': 'Diseases & Pests', 'projects': mango_threats})
+# Home Page
+class HomeView(TemplateView):
+    template_name = 'mango_pests_app/home.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'Home'
+        context['heading'] = "Welcome to the World Mango Organisation of Group-28 of HIT237!"
+        context['description'] = "We are dedicated to combating mango pests and diseases through research and awareness. Browse our site to learn more about the pests that are consuming our beloved mangos!"
+        return context
 
 
-# Threat Details
-def project_details(request, project_name):
-    project = next((item for item in mango_threats if item.slug == project_name), None)
-    if project:
-        return render(request, 'mango_pests_app/project_details.html', {'project': project})
-    else:
-        return render(request, 'mango_pests_app/404.html')
+# Threat List Page
+class ThreatListView(TemplateView):
+    template_name = 'mango_pests_app/threat_list.html'
 
-# About
-def about(request):
-    page_title = "About Us"  
-    team_members = [
-        {'name': 'Mitchell Danks', 'student_id': 'S320289', 'image': 'aboutmitchell.png'},
-        {'name': 'Benjamin Denison-Love', 'student_id': 'S330803', 'image': 'aboutbenjamin.png'},
-        {'name': 'Quang Thuan Nguyen', 'student_id': 'S370553', 'image': 'aboutquang.png'},
-        {'name': 'Spencer Siu', 'student_id': 'S344930', 'image': 'aboutspencer.png'}
-    ]
-    return render(request, 'mango_pests_app/about.html', {'page_title': page_title, 'team_members': team_members})
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'Diseases & Pests'
+        context['threats'] = mango_threats
+        return context
+
+
+# Threat Details Page
+class ThreatDetailView(View):
+    def get(self, request, threat_name):
+        threat = next((item for item in mango_threats if item.slug == threat_name), None)
+        if threat:
+            return render(request, 'mango_pests_app/threat_details.html', {'threat': threat})
+        else:
+            return render(request, 'mango_pests_app/404.html')
+
+
+# About Page
+class AboutView(TemplateView):
+    template_name = 'mango_pests_app/about.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = "About Us"
+        context['team_members'] = [
+            {'name': 'Mitchell Danks', 'student_id': 'S320289', 'image': 'aboutmitchell.png'},
+            {'name': 'Benjamin Denison-Love', 'student_id': 'S330803', 'image': 'aboutbenjamin.png'},
+            {'name': 'Quang Thuan Nguyen', 'student_id': 'S370553', 'image': 'aboutquang.png'},
+            {'name': 'Spencer Siu', 'student_id': 'S344930', 'image': 'aboutspencer.png'}
+        ]
+        return context

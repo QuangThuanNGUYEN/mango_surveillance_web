@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}{{ threat.name }} - Details{% endblock %}
+
+{% block content %}
+<div class="threat-detail-container">
+    <h4>{{ threat.name }}</h4>
+    
+    <img src="{% static 'images/'|add:threat.image %}" alt="{{ threat.name }}" class="threat-detail-image">
+    
+    <div class="threat-section">
+        <h5 class="threat-section-title">Description</h5>
+        <p>{{ threat.description }}</p>
+    </div>
+    
+    <div class="threat-section">
+        <h5 class="threat-section-title">Details</h5>
+        <div class="threat-content">{{ threat.details|safe }}</div>
+    </div>
+    
+    <div class="back-button">
+        <a href="{% url 'threat_list' %}" class="back-link">← Back to All Threats</a>
+    </div>
+</div>
+{% endblock %}

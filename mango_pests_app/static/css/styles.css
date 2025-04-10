@@ -131,14 +131,14 @@ h4 {
 }
 
 /* D&P Page */
-.projectlist-item {
+.threatlist-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
 }
 
-.project_list-image {
+.threat_list-image {
     max-width: 20vw;
     width: 100%;
     height: auto;
@@ -160,7 +160,7 @@ h4 {
     text-align: center;
 }
 
-.project_list-container, .projectlist-item {
+.threat_list-container, .threatlist-item {
     margin-left: 20vw; 
     margin-top: 23vh; 
     margin-bottom: 2vh;

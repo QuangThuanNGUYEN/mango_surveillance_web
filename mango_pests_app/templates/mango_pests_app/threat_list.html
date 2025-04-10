@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}Mango Pests & Diseases - WMO{% endblock %}
+
+{% block content %}
+<h4>Mango Pests & Diseases</h4>
+
+<div class="threat_list-container">
+    {% for threat in threats %}
+    <div class="threatlist-item">
+        <div class="image-container">
+            <img src="{% static 'images/'|add:threat.image %}" alt="{{ threat.name }}" class="threat_list-image">
+        </div>
+        <div class="threat-content">
+            <div class="dpname">
+                <a href="{% url 'threat_details' threat.slug %}">{{ threat.name }}</a>
+            </div>
+            <div class="dpdesc">{{ threat.description|truncatewords:25 }}</div>
+            <div class="read-more">
+                <a href="{% url 'threat_details' threat.slug %}" class="read-more-link">Read More</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
