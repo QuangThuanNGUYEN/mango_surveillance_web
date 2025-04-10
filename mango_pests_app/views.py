@@ -23,10 +23,16 @@ class ThreatListView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['page_title'] = 'Diseases & Pests'
-        context['threats'] = mango_threats
-        return context
+        query = self.request.GET.get('q', '').lower()
+        if query:
+            filtered_threats = [t for t in mango_threats if query in t.name.lower()]
+        else:
+            filtered_threats = mango_threats
 
+        context['page_title'] = 'Diseases & Pests'
+        context['threats'] = filtered_threats
+        context['query'] = query
+        return context
 
 # Threat Details Page
 class ThreatDetailView(View):

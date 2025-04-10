@@ -6,15 +6,21 @@
 
 {% block content %}
 <div class="threat-detail-container">
-    <h4>{{ threat.name }}</h4>
+    
     
     <img src="{% static 'images/'|add:threat.image %}" alt="{{ threat.name }}" class="threat-detail-image">
     
     <div class="threat-section">
-        <h5 class="threat-section-title">Description</h5>
-        <p>{{ threat.description }}</p>
+        <div class="threat-detail-header">
+            <!-- <h3 class="threat-section-title">Threat Overview</h3> -->
+            <h4>{{ threat.name }}</h4>
+        </div>
+        <div class="threat-detail-content">
+            <p>{{ threat.details }}</p>
+        </div>
     </div>
     
+</div>
     <div class="threat-section">
         <h5 class="threat-section-title">Details</h5>
         <div class="threat-content">{{ threat.details|safe }}</div>
@@ -23,5 +29,4 @@
     <div class="back-button">
         <a href="{% url 'threat_list' %}" class="back-link">← Back to All Threats</a>
     </div>
-</div>
 {% endblock %}

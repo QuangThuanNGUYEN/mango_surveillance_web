@@ -5,22 +5,24 @@
 {% block title %}Mango Pests & Diseases - WMO{% endblock %}
 
 {% block content %}
-<h4>Mango Pests & Diseases</h4>
-
-<div class="threat_list-container">
+<form method="get" action="" class="search-form">
+    <input type="text" name="q" placeholder="Search threats..." value="{{ query }}">
+    <button type="submit">Search</button>
+</form>
+<div class="threat-list-container">
     {% for threat in threats %}
-    <div class="threatlist-item">
+    <div class="threat-list-item">
         <div class="image-container">
-            <img src="{% static 'images/'|add:threat.image %}" alt="{{ threat.name }}" class="threat_list-image">
+            <img src="{% static 'images/'|add:threat.image %}" alt="{{ threat.name }}" class="threat-list-image">
         </div>
         <div class="threat-content">
             <div class="dpname">
                 <a href="{% url 'threat_details' threat.slug %}">{{ threat.name }}</a>
             </div>
-            <div class="dpdesc">{{ threat.description|truncatewords:25 }}</div>
-            <div class="read-more">
+            <div class="dpdesc">{{ threat.description|truncatewords:10 }}</div>
+            <!-- <div class="read-more">
                 <a href="{% url 'threat_details' threat.slug %}" class="read-more-link">Read More</a>
-            </div>
+            </div> -->
         </div>
     </div>
     {% endfor %}
