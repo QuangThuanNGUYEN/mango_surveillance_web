@@ -3,7 +3,7 @@
 from django.views.generic import TemplateView, View
 from django.shortcuts import render
 from .data import mango_threats
-
+from django.core.paginator import Paginator
 
 # Home Page
 class HomeView(TemplateView):
@@ -12,7 +12,7 @@ class HomeView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'Home'
-        context['heading'] = "Welcome to the World Mango Organisation of Group-28 of HIT237!"
+        context['heading'] = "Welcome to the World Mango Organisation of Group 28 of HIT237!"
         context['description'] = "We are dedicated to combating mango pests and diseases through research and awareness. Browse our site to learn more about the pests that are consuming our beloved mangos!"
         return context
 
@@ -29,8 +29,14 @@ class ThreatListView(TemplateView):
         else:
             filtered_threats = mango_threats
 
+        
+        paginator = Paginator(filtered_threats, 10)  # Show 10 items per page
+        page_number = self.request.GET.get('page')  # Get the current page number from the URL
+        page_obj = paginator.get_page(page_number)
+
+        # Add context variables
         context['page_title'] = 'Diseases & Pests'
-        context['threats'] = filtered_threats
+        context['page_obj'] = page_obj  # Pass the paginated objects to the template
         context['query'] = query
         return context
 

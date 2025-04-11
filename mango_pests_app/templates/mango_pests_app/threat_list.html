@@ -8,23 +8,42 @@
 <form method="get" action="" class="search-form">
     <input type="text" name="q" placeholder="Search threats..." value="{{ query }}">
     <button type="submit">Search</button>
+    {% if query %}
+        <button type="submit" name="q" value="" class="clear-search-btn">Clear Search</button>
+    {% endif %}
 </form>
 <div class="threat-list-container">
-    {% for threat in threats %}
-    <div class="threat-list-item">
+    {% for threat in page_obj %}
+        <a href="{% url 'threat_details' threat.slug %}" class="threat-list-item">
         <div class="image-container">
             <img src="{% static 'images/'|add:threat.image %}" alt="{{ threat.name }}" class="threat-list-image">
         </div>
         <div class="threat-content">
             <div class="dpname">
-                <a href="{% url 'threat_details' threat.slug %}">{{ threat.name }}</a>
+                 <p>{{threat.name}}</p>
             </div>
             <div class="dpdesc">{{ threat.description|truncatewords:10 }}</div>
-            <!-- <div class="read-more">
-                <a href="{% url 'threat_details' threat.slug %}" class="read-more-link">Read More</a>
-            </div> -->
         </div>
-    </div>
+    </a>
+    {% empty %}
+        <p>No threats found.</p>
     {% endfor %}
+</div>
+<div>
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1&q={{ query }}">« first</a>
+            <a href="?page={{ page_obj.previous_page_number }}&q={{ query }}">previous</a>
+        {% endif %}
+        
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+        
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&q={{ query }}">next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}&q={{ query }}">last »</a>
+        {% endif %}
+    </span>
 </div>
 {% endblock %}

@@ -5,19 +5,16 @@
 body, html {
     margin: 0;
     padding: 0;
+    height: 100%;
 }
 
+.page-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
 /* Banner */
 .banner {
-    /* position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    padding: 7vh 0; 
-    text-align: center;
-    font-size: 2em;
-    font-weight: bold;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3); */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -35,62 +32,18 @@ body, html {
 
 }
 
-/* Body */
 
 
-/* Banner Elements */
-/* Mango Image */
-/* .mango-image {
-    position: fixed;
-    top: -8vh;
-    left: 0vw;
-    width: 10vw; 
-} */
-
-/* Banner Text */
-/* h1 {
-    position: fixed;
-    top: 1vh; 
-    left: 9vw; 
-    color: #0fa801;
-    font-style: bold;
-    font-family: 'Archivo Black', sans-serif; 
-    letter-spacing: 1px;
-    font-size: 2vw;
+.background-video {
+    position: fixed; /* Stays in place */
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover; /* Keeps the aspect ratio and fills screen */
+    z-index: -1; /* Puts video behind other content */
 }
 
-h2 {
-    position: fixed;
-    top: 4vh; 
-    left: 52vw;
-    color: #0fa801;
-    font-family: 'Archivo Black', sans-serif; 
-    font-weight: bold;
-    letter-spacing: 1px;
-    font-size: 2vw; 
-}
-
-h3 {
-    position: fixed;
-    top: 3.3vh; 
-    left: 85vw; 
-    color: #0fa801;
-    font-family: 'Archivo Black', sans-serif; 
-    font-weight: bold;
-    letter-spacing: 1px;
-    font-size: 2vw;
-}
-
-h4 {
-    position: absolute;
-    left: 50%; 
-    top: 20vh; 
-    transform: translateX(-50%);  
-    color: #1aff00;
-    font-family: 'Archivo Black', sans-serif;
-    font-weight: bold;
-    font-size: 3vw;
-} */
 
 .mango-image {
     width: 100px;
@@ -99,14 +52,15 @@ h4 {
 
 
 .nav-bar {
-    /* text-align: right; */
     display: flex;
     gap: 32px;
     flex-wrap: wrap;
+    margin-right: 20px;
 }
 
 .nav-bar a {
     font-size: 20px;
+    color: #000000;
     font-weight: bold;
     text-decoration: none;
     font-family: 'Archivo Black', sans-serif; 
@@ -120,8 +74,30 @@ h4 {
 .header h4{
     text-align: center;
     font-size: 30px;
+    font-family: 'Archivo Black', sans-serif; 
+    color: white
 
 }
+
+.site-footer {
+    background-color: #333;
+    color: #fff;
+    padding: 20px 0;
+    text-align: center;
+    font-size: 0.9em;
+    margin: 0;
+}
+
+.site-footer a {
+    color: #ffc107;
+    text-decoration: none;
+    margin: 0 8px;
+}
+
+.site-footer a:hover {
+    text-decoration: underline;
+}
+
 
 
 .search-form {
@@ -220,25 +196,20 @@ h4 {
 }
 
 /* D&P Page */
-.threat-list-item {
+.threat-list-container {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     align-items: center;
     text-align: center;
-    max-width: 20vw;
-    flex: 1 1 200px;
-    padding: 16px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background-color: #f9f9f9;
-    box-shadow: 0 2px 4px rgbd(0,0,0,0.1);
-    text-align: center;
-}
+    gap: 100px;
+    justify-content: center;
+} 
 
 .threat-list-image {
-    max-height: 10vw;
+    max-height: 12vw;
     height: 100%;
     width: auto;
+    max-width: 18vw;
 }
 
 .dpname {
@@ -257,32 +228,76 @@ h4 {
     text-align: center;
 }
 
-.threat-list-container{
+.threat-list-item{
     display:flex;
     flex-wrap: wrap;
-    gap: 100px;
     justify-content: center;
-    align-items: center
-    /* margin-left: 20vw; 
-    margin-top: 23vh; 
-    margin-bottom: 2vh; */
+    align-items: center;
+    width: 20vw;
+    height: 30vw;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 5px 0px 5px 5px;
+    text-decoration: none;
 }
 
 
 
+.threat-list-item:hover {
+    background-color: #ced774;
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.threat-list-item:hover .threat-list-image {
+    transform: scale(1.05);
+    transition: transform 0.35s ease;
+}
+.threat-list-item:hover .dpname {
+    color: #ff9900;
+    transition: color 0.35s ease;
+}
+
+
+
+
+
 .content-box {
-    background-color: white;
+    background-color: rgba(0, 0, 0, 0.2);
     margin: 50px auto;
     padding: 30px;
-    max-width: 800px;
+    width: 800px;
+    text-align: center;
     border-radius: 10px;
     box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    color: white
 }
 
 .search-form {
     text-align: center;
     background-color: white;
 }
+
+/* Style for the Clear Search Button */
+.clear-search-btn {
+    background-color: #f44336; /* Red color */
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+}
+
+.clear-search-btn:hover {
+    background-color: #d32f2f; /* Darker red when hovered */
+}
+
+.clear-search-btn:focus {
+    outline: none; /* Remove focus outline */
+}
+
 
 .threat-detail-container {
     display: flex;
@@ -294,4 +309,53 @@ h4 {
     max-width: 20vw; 
     height: auto;
     margin-right: 20px;
+}
+
+
+/* Container for pagination links */
+.step-links {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px; /* Adds space between links */
+    margin-top: 20px;
+    margin-right: 80px;
+    font-size: 1rem;
+    font-family: 'Archivo Black', sans-serif; 
+
+
+}
+
+/* Style for each pagination link */
+.step-links a {
+    text-decoration: none;
+    color: #007bff; /* Blue color for the links */
+    padding: 8px 12px;
+    border-radius: 5px;
+    background-color: #f8f9fa; /* Light background for links */
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Style when hovering over a link */
+.step-links a:hover {
+    background-color: #007bff; /* Blue background on hover */
+    color: white; /* Change text color to white */
+}
+
+/* Style for the "current" page indicator */
+.step-links .current {
+    font-weight: bold;
+    color: #333;
+}
+
+/* Disable the links if on the first or last page (optional, make links unclickable) */
+.step-links a[disabled] {
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Style for the first/last page links */
+.step-links a:first-child,
+.step-links a:last-child {
+    font-weight: bold;
 }
