@@ -1,36 +1,44 @@
+
 {% load static %}
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>{% block title %}WMO - World Mango Organisation{% endblock %}</title>
     <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
 </head>
-<header>
-    {% block header %}
-        <h4>{{ page_title }}</h4>
-    {% endblock %}
-</header>
-<body>
-    <div class="banner"></div>
 
-    <a href="{% url 'home' %}">
-        <img src="{% static 'images/mango.png' %}" alt="Mango Image" class="mango-image">
-    </a>
-    <h1>
-        <a href="{% url 'home' %}" style="text-decoration: none; color: inherit;">
-            World Mango Organisation
-        </a>
-    </h1>
-    <h2>
-        <a href="{% url 'project_list' %}" style="text-decoration: none; color: inherit;">
-            Mango Pests & Diseases
-        </a>
-    </h2>
-    <h3>
-        <a href="{% url 'about' %}" style="text-decoration: none; color: inherit;">
-            About Us
-        </a>
-    </h3>
-    {% block content %}{% endblock %}
+<body>
+
+    <header class="top-bar">
+        <!-- Mango Logo -->
+         <div class="logo-name-container">
+            <img src="{% static 'images/mango.png' %}" alt="Mango Logo" class="mango-image" />
+            <div class="company-name">GROUP 28</div>
+         </div>
+        
+        <!-- Navigation Links -->
+        <nav>
+            <ul class="nav-links">
+                <li class="nav-item"><a href="{% url 'home' %}" class="nav-link">Home</a></li>
+                <li class="nav-item"><a href="{% url 'project_list' %}" class="nav-link">Projects</a></li>
+                <li class="nav-item"><a href="{% url 'about' %}" class="nav-link">About</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="page-container">
+        <!-- Page Subheading -->
+        <div class="page-title">
+            {% block header %}
+                <h1>{{ page_title }}</h1>
+            {% endblock %}
+        </div>
+
+        {% block content %}
+        <!-- The content that is displayed goes here-->
+        {% endblock %}
+    </main>
+
 </body>
 </html>

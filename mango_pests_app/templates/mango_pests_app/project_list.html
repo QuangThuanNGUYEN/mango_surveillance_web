@@ -1,18 +1,20 @@
 {% extends 'base.html' %}
-
 {% load static %}
 
-{% block title %}Mango Pests & Diseases - WMO{% endblock %}
+{% block title %}Projects - WMO{% endblock %}
 
 {% block content %}
-<div class="project_list-container">
+
+<div class="project-list">
     {% for project in projects %}
-    <div class="projectlist-item">
-        <img src="{% static 'images/'|add:project.image %}" alt="{{ project.name }}" class="project_list-image">
-        <div class="dpname">
+    <div class="project-card">
+        <div class="project-title">
             <a href="{% url 'project_details' project.slug %}">{{ project.name }}</a>
         </div>
-        <div class="dpdesc">{{ project.description }}</div>
+        <div class="project-body">
+            <img src="{% static 'images/' %}{{ project.image }}" alt="{{ project.name }}" class="project-image">
+            <p class="project-description">{{ project.description }}</p>
+        </div>
     </div>
     {% endfor %}
 </div>

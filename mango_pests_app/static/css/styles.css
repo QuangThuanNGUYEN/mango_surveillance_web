@@ -1,89 +1,123 @@
 /* Google Font */
 @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Lilita+One&display=swap');
 
-/* Banner */
-.banner {
-    position: fixed;
-    top: 0;
-    left: 0;
-    background-color: #fff07e;
-    width: 100%;
-    padding: 7vh 0; 
-    text-align: center;
-    font-size: 2em;
-    font-weight: bold;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
-}
-
 /* Body */
 body {
-    font-family: sans-serif;
+    font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     margin: 0;
     padding: 0;
     display: flex;
     justify-content: center;
-    align-items: center;
     align-items: flex-start; 
     flex-direction: column;
-    background-color: #cc7503;
+    background-color: #fefbe9;
 }
 
-/* Banner Elements */
+/* Top Bar Styles ----------------------------------*/ 
+.top-bar {
+    width: 100%;
+    background-color: #183a1d;
+    padding: 35px 0;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 10;
+}
+
+/* Navigation Bar */
+.nav-links {
+    position: absolute;
+    top: 50%;
+    left: 60vw;
+    display: flex;
+    gap: 3vw;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    z-index: 1010;
+    transform: translateY(-50%);
+}
+
+.nav-item {
+    font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-size: 2vw;
+    font-weight: bold;
+}
+
+.nav-link {
+    color: white;
+    text-decoration: none;
+    letter-spacing: 1px;
+}
+
+.nav-link:hover {
+    text-decoration: underline;
+}
+
+/* Layout container for logo and company name */
+
+.logo-name-container {
+    flex-direction: row;
+    display: flex;
+    align-items: center;
+}
+
 /* Mango Image */
 .mango-image {
-    position: fixed;
-    top: -8vh;
-    left: 0vw;
-    width: 10vw; 
-}
-
-/* Banner Text */
-h1 {
-    position: fixed;
-    top: 1vh; 
-    left: 9vw; 
-    color: #0fa801;
-    font-style: bold;
-    font-family: 'Archivo Black', sans-serif; 
-    letter-spacing: 1px;
-    font-size: 2vw;
-}
-
-h2 {
-    position: fixed;
-    top: 4vh; 
-    left: 52vw;
-    color: #0fa801;
-    font-family: 'Archivo Black', sans-serif; 
-    font-weight: bold;
-    letter-spacing: 1px;
-    font-size: 2vw; 
-}
-
-h3 {
-    position: fixed;
-    top: 3.3vh; 
-    left: 85vw; 
-    color: #0fa801;
-    font-family: 'Archivo Black', sans-serif; 
-    font-weight: bold;
-    letter-spacing: 1px;
-    font-size: 2vw;
-}
-
-h4 {
     position: absolute;
-    left: 50%; 
-    top: 20vh; 
-    transform: translateX(-50%);  
-    color: #1aff00;
-    font-family: 'Archivo Black', sans-serif;
+    height: 65px;
+    width: auto;
+    top: 1.5vh;
+    left: 2vw;
+    box-sizing: content-box;
+
+    /* aesthetic */
+    border: 2px black;
+    border-radius: 20%;
+    padding: 2px;
+    transform: translateY(-30%);
+}
+
+/* Company Name */
+.company-name {
+    font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-size: 45px;
+    color: #f0a04b;
     font-weight: bold;
-    font-size: 3vw;
+    position: absolute;
+    left: 12vw;
+    top: auto;
+}
+
+/* Header -----------------------------------*/
+
+header {
+    width: 100%;
+    background-color: #cc7503; /* orange mango color */
+    border-bottom: 5px solid #ffffff; /* white line to replace the divider */
+    padding-bottom: 2vh; /* adjust as needed to reduce space below */
+    position: relative;
+    z-index: 1000;
+}
+
+/* Page Title (used to be h4) */
+.page-title {
+    text-align: center;
+    margin: 40px 0 20px;
+    color: #183a1d;
+    font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+.page-title h1, .page-title h4 {
+    margin: 0;
 }
 
 
-/* About Us Page */
+/* About Us Page ------------------------------------*/
 .aboutus-container {
     display: flex;  
     justify-content: center;  
@@ -101,24 +135,21 @@ h4 {
     text-align: center;  
 }
 
-/* About Us Images */
 .aboutus-image {
     max-width: 15vw; 
     width: 100%;
     height: auto;
 }
 
-/* About Us Names */
 .aboutus-name {
-    font-family: 'Archivo Black', sans-serif;
+    font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 1vw; 
     color: #000000;
     margin-top: 1vh;
 }
 
-/* About Us SIDs */
 .aboutus-subname {
-    font-family: 'Archivo Black', sans-serif;
+    font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 1.5vw; 
     color: #000000; 
     margin-top: 0.5vh; 
@@ -130,7 +161,62 @@ h4 {
     padding: 0;
 }
 
-/* D&P Page */
+
+/* main page content container */
+.page-container {
+    max-width: 1200px;
+    margin: 20vh auto 4vh auto;
+    padding: 2vh 2vw;
+    background-color: #f0a04b;
+    border-radius: 10px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2), 0 15px 40px rgba(0, 0, 0, 0.05);
+}
+
+/* D&P Project List */
+
+.project-list {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    padding: 20px 40px;
+}
+
+.project-card {
+    background-color: #fff8e1;
+    border:1px solid #ffd54f;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2), 0 15px 40px rgba(0, 0, 0, 0.05);
+}
+
+.project-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #4e342e;
+  }
+
+.project-body {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    flex-wrap: wrap; 
+}
+
+.project-image {
+    width: 250px;
+    height: auto;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.project-description {
+    flex: 1;
+    font-size: 16px;
+    color: #333;
+}
+
 .projectlist-item {
     display: flex;
     flex-direction: column;
@@ -145,14 +231,14 @@ h4 {
 }
 
 .dpname {
-    font-family: 'Archivo Black', sans-serif;
+    font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 2vw; 
     color: #000000;
     margin-top: 1vh;
 }
 
 .dpdesc {
-    font-family: 'Arial', sans-serif;
+    font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 1.5vw; 
     color: #333333;
     margin-top: 0.5vh; 
@@ -160,17 +246,32 @@ h4 {
     text-align: center;
 }
 
-.project_list-container, .projectlist-item {
-    margin-left: 20vw; 
-    margin-top: 23vh; 
-    margin-bottom: 2vh;
+/* project details page */
+
+.project-details {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #fffef2;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    text-align: center;
 }
 
-.content-box {
-    background-color: white;
-    margin: 50px auto;
-    padding: 30px;
-    max-width: 800px;
-    border-radius: 10px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+.project-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.project-description {
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.project-full-details {
+    font-size: 1rem;
+    color: #333;
+    line-height: 1.5;
 }

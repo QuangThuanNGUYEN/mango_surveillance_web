@@ -1,13 +1,16 @@
 {% extends 'base.html' %}
-
 {% load static %}
 
-{% block title %}{{ project.name }} - Details{% endblock %}
+{% block title %}{{ project.name }} - WMO{% endblock %}
+
+{% block header %}
+    <h4>{{ project.name }}</h4>
+{% endblock %}
 
 {% block content %}
-<div class="project-detail-container">
-    <img src="{% static 'images/'|add:project.image %}" alt="{{ project.name }}" class="project-detail-image">
-    <p>{{ project.description }}</p>
-    <div>{{ project.details }}</div>
+<div class="project-details">
+    <img src="{% static 'images/'|add:project.image %}" alt="{{ project.name }}" class="project-image">
+    <p class="project-description">{{ project.description }}</p>
+    <p class="project-full-details">{{ project.details }}</p>
 </div>
 {% endblock %}
