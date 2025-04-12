@@ -95,9 +95,9 @@ body {
 
 header {
     width: 100%;
-    background-color: #cc7503; /* orange mango color */
-    border-bottom: 5px solid #ffffff; /* white line to replace the divider */
-    padding-bottom: 2vh; /* adjust as needed to reduce space below */
+    background-color: #cc7503;
+    border-bottom: 5px solid #ffffff;
+    padding-bottom: 2vh;
     position: relative;
     z-index: 1000;
 }
