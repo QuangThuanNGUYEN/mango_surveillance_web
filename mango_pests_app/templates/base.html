@@ -2,35 +2,57 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}WMO - World Mango Organisation{% endblock %}</title>
     <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
 </head>
-<header>
-    {% block header %}
-        <h4>{{ page_title }}</h4>
-    {% endblock %}
-</header>
 <body>
-    <div class="banner"></div>
+    <div class="page-container">
 
-    <a href="{% url 'home' %}">
-        <img src="{% static 'images/mango.png' %}" alt="Mango Image" class="mango-image">
-    </a>
-    <h1>
-        <a href="{% url 'home' %}" style="text-decoration: none; color: inherit;">
-            World Mango Organisation
-        </a>
-    </h1>
-    <h2>
-        <a href="{% url 'project_list' %}" style="text-decoration: none; color: inherit;">
-            Mango Pests & Diseases
-        </a>
-    </h2>
-    <h3>
-        <a href="{% url 'about' %}" style="text-decoration: none; color: inherit;">
-            About Us
-        </a>
-    </h3>
-    {% block content %}{% endblock %}
+    <div class="banner">
+        <div class="logo-container">
+            <a href="{% url 'home' %}">
+                <img src="{% static 'images/mango.png' %}" alt="Mango Image" class="mango-image">
+            </a>
+            <h1>
+                <a href="{% url 'home' %}" style="text-decoration: none; color: inherit;">
+                    World Mango Organisation
+                </a>
+            </h1>
+        </div>
+            <nav class="nav-bar">
+                <a href="{% url 'home' %}" >
+                    Home
+                </a>
+                <a href="{% url 'threat_list' %}" >
+                    Mango Pests & Diseases
+                </a>
+                <a href="{% url 'about' %}" >
+                    About Us
+                </a>
+        </nav>
+    </div>
+    <header class="header">
+        {% block header %}
+            <h4>{{ page_title }}</h4>
+        {% endblock %}
+    </header>
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+    <footer class="site-footer">
+        <div class="footer-content">
+            <p>© 2025 World Mango Organisation. All rights reserved.</p>
+            <p>Contact: <a href="mailto:info@wmo.org">info@wmo.org</a> | Phone: +61 123 456 789</p>
+            <div class="footer-links">
+                <a href="{% url 'home' %}">Home</a> |
+                <a href="{% url 'threat_list' %}">Threats</a> |
+                <a href="{% url 'about' %}">About Us</a>
+            </div>
+        </div>
+    </footer>
+</div>
 </body>
 </html>

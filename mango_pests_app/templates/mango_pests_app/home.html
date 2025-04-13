@@ -1,18 +1,16 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Home - WMO{% endblock %}
 
 {% block content %}
-<div class="top-bar">
-    <button>Home</button>
-    <button>About</button>
-    <button>Project Details</button>
-    <button>Project List</button>
-</div>
-
+<video autoplay muted loop class="background-video">
+    <source src="{% static 'videos/background.mp4' %}" type="video/mp4">
+    Your browser does not support the video tag.
+</video>
 <div class="content-box">
-    <h1>{{ homepage_content.heading }}</h1>
-    <p>{{ homepage_content.description }}</p>
+    <h1>{{ heading }}</h1>
+    <p>{{ description }}</p>
 </div>
 {% endblock %}
 
