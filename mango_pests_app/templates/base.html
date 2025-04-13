@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}WMO - World Mango Organisation{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
 </head>
 <body>
@@ -13,7 +14,7 @@
     <div class="banner">
         <div class="logo-container">
             <a href="{% url 'home' %}">
-                <img src="{% static 'images/mango.png' %}" alt="Mango Image" class="mango-image">
+                <img src="{% static 'images/logo.png' %}" alt="Mango Image" class="mango-image">
             </a>
             <h1>
                 <a href="{% url 'home' %}" style="text-decoration: none; color: inherit;">
@@ -26,7 +27,7 @@
                     Home
                 </a>
                 <a href="{% url 'threat_list' %}" >
-                    Mango Pests & Diseases
+                    Pests and Diseases
                 </a>
                 <a href="{% url 'about' %}" >
                     About Us
