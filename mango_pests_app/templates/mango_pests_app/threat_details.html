@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
-
 {% load static %}
+
+{% block page_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/threat_details.css' %}">
+{% endblock %}
 
 {% block title %}{{ threat.name }} - Details{% endblock %}
 

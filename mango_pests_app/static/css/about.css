@@ -1,0 +1,42 @@
+.aboutus-container {
+    display: flex;  
+    justify-content: center;  
+    align-items: center;  
+    flex-wrap: wrap; 
+    gap: 10vw; 
+    margin-top: 45vh; 
+    margin-left: 5vw;
+}
+
+.aboutus-item {
+    display: flex;
+    flex-direction: column; 
+    align-items: center; 
+    text-align: center;  
+}
+
+.aboutus-image {
+    max-width: 15vw; 
+    width: 100%;
+    height: auto;
+}
+
+.aboutus-name {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 1vw; 
+    color: #000000;
+    margin-top: 1vh;
+}
+
+.aboutus-subname {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 1.5vw; 
+    color: #000000; 
+    margin-top: 0.5vh; 
+}
+
+.aboutus-images, .aboutus-names {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}

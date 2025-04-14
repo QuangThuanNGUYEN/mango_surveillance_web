@@ -1,10 +1,15 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block page_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/compare_threats.css' %}">
+{% endblock %}
+
 {% block title %}Compare Mango Threats{% endblock %}
 
 {% block content %}
-<h2>Compare Mango Threats</h2>
+<h2>Compare Mango Threats (Up to 3 threats)</h2>
+<h4>Check the boxes and click compare button to compare</h3>
 <div class="comparison-page-container">
 <form method="post">
     {% csrf_token %}

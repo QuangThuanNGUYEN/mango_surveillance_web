@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
 
-
+{% block page_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/home.css' %}">
+{% endblock %}
 
 {% block content %}
 <h4 class="homepage-header">Home</h4>
@@ -14,6 +16,3 @@
     <p>{{ description }}</p>
 </div>
 {% endblock %}
-
-<!--Note to self. put mango image background. centre top bar for buttons. centre content block for text. 
-Recode content block to not be hard coded. refer to paper prototype design.-->

@@ -297,7 +297,6 @@ body, html {
 }
 
 
-
 .threat-list-item:hover {
     background-color: #ced774;
     transform: scale(1.05);
@@ -312,9 +311,6 @@ body, html {
     color: #ff9900;
     transition: color 0.35s ease;
 }
-
-
-
 
 
 .content-box {
@@ -368,35 +364,10 @@ body, html {
     font-family: 'Archivo Black', sans-serif;
 }
 
-/* 
-.threat-detail-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-}
-
-.threat-detail-image {
-    max-width: 20vw; 
-    height: auto;
-    margin-right: 20px;
-}
- */
 
  .comparison-page-container{
     height: 100vh;
  }
-
-
-
-
-
-
-
-
-
-
-
-
 
  
  .threat-detail-container {
@@ -467,7 +438,6 @@ threat-description {
 }
 
 
-
 /* Container for pagination links */
 
 .pagination-container {
@@ -528,9 +498,6 @@ threat-description {
 .step-links a:last-child {
     font-weight: bold;
 }
-
-
-
 
 
 .comparison-select {

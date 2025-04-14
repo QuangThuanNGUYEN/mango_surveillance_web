@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
-
 {% load static %}
+
+{% block page_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/threat_list.css' %}">
+{% endblock %}
 
 {% block title %}Mango Pests & Diseases - WMO{% endblock %}
 
@@ -31,8 +34,6 @@
             <option value="name_desc" {% if sort_option == 'name_desc' %}selected{% endif %}>Name (Z–A)</option>
         </select>
     </form>
-    
-    
 </div>
 <div class="threat-list-container">
     {% for threat in page_obj %}
@@ -57,7 +58,6 @@
         {{ pest_count }} pest{{ pest_count|pluralize }}, 
         {{ disease_count }} disease{{ disease_count|pluralize }}.
     </p>
-    
     
     <span class="step-links">
         {% if page_obj.has_previous %}

@@ -1,0 +1,28 @@
+.comparison-page-container {
+    height: 100vh;
+}
+
+.comparison-select {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.comparison-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.comparison-table th,
+.comparison-table td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+}
+
+.error-message {
+    color: #e94034;
+    font-weight: bold;
+    margin: 10px 0;
+}

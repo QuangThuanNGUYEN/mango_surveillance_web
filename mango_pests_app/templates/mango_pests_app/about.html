@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
-
 {% load static %}
+
+{% block page_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/about.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="aboutus-container">
