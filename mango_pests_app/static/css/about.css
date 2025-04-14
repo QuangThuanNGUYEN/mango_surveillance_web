@@ -1,42 +1,47 @@
 .aboutus-container {
-    display: flex;  
-    justify-content: center;  
-    align-items: center;  
-    flex-wrap: wrap; 
-    gap: 10vw; 
-    margin-top: 45vh; 
-    margin-left: 5vw;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 4rem;
+    margin-top: 0;
+    /* padding: 2rem 2rem 2rem; */
 }
 
 .aboutus-item {
     display: flex;
-    flex-direction: column; 
-    align-items: center; 
-    text-align: center;  
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 200px;
 }
 
 .aboutus-image {
-    max-width: 15vw; 
     width: 100%;
+    max-width: 150px;
     height: auto;
+    border-radius: 50%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .aboutus-name {
     font-family: 'Archivo Black', sans-serif;
-    font-size: 1vw; 
-    color: #000000;
-    margin-top: 1vh;
+    font-size: 1.2rem;
+    margin-top: 1rem;
+    color: #333;
 }
 
 .aboutus-subname {
     font-family: 'Archivo Black', sans-serif;
-    font-size: 1.5vw; 
-    color: #000000; 
-    margin-top: 0.5vh; 
+    font-size: 1rem;
+    margin-top: 0.5rem;
+    color: #666;
 }
 
-.aboutus-images, .aboutus-names {
-    list-style-type: none;
+/* Optional Reset */
+.aboutus-images,
+.aboutus-names {
+    list-style: none;
     margin: 0;
     padding: 0;
 }
