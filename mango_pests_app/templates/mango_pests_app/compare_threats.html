@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Compare Mango Threats{% endblock %}
+
+{% block content %}
+<h2>Compare Mango Threats</h2>
+<div class="comparison-page-container">
+<form method="post">
+    {% csrf_token %}
+    <div class="comparison-select">
+        {% for threat in threats %}
+            <label>
+                <input type="checkbox" name="threats" value="{{ threat.slug }}">
+                {{ threat.name }}
+            </label>
+        {% endfor %}
+    </div>
+    <button type="submit">Compare</button>
+</form>
+
+{% if error_message %}
+    <div class="error-message">{{ error_message }}</div>
+{% endif %}
+
+{% if selected_threats %}
+<div class="comparison-table">
+    <table>
+        <thead>
+            <tr>
+                <th>Attribute</th>
+                {% for threat in selected_threats %}
+                    <th>{{ threat.name }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Type</td>
+                {% for threat in selected_threats %}
+                    <td>{{ threat.threat_type }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td>Description</td>
+                {% for threat in selected_threats %}
+                    <td>{{ threat.description }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td>Image</td>
+                {% for threat in selected_threats %}
+                    <td><img src="{% static 'images/'|add:threat.image %}" width="100"></td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="back-button">
+    <a href="{% url 'threat_list' %}" class="back-link">← Back to All Threats</a>
+</div>
+{% endblock %}
+</div>
