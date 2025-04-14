@@ -7,6 +7,11 @@
 {% block content %}
 <form method="get" action="" class="search-form">
     <input type="text" name="q" placeholder="Search threats..." value="{{ query }}">
+    <select name="category">
+        <option value="">All</option>
+        <option value="pest" {% if threat_type == 'pest' %}selected{% endif %}>Pests</option>
+        <option value="disease" {% if threat_type == 'disease' %}selected{% endif %}>Diseases</option>
+    </select>
     <button type="submit">Search</button>
     {% if query %}
         <button type="submit" name="q" value="" class="clear-search-btn">Clear Search</button>
