@@ -1,70 +1,80 @@
+{# Extend the base layout #}
 {% extends "base.html" %}
 {% load static %}
 
+{# Load page-specific CSS #}
 {% block page_css %}
 <link rel="stylesheet" type="text/css" href="{% static 'css/compare_threats.css' %}">
 {% endblock %}
 
+{# Page title in the browser tab #}
 {% block title %}Compare Mango Threats{% endblock %}
 
 {% block content %}
 <h2>Compare Mango Threats (Up to 3 threats)</h2>
-<h4>Check the boxes and click compare button to compare</h3>
+<h4>Check the boxes and click compare button to compare</h4>
+
 <div class="comparison-page-container">
-<form method="post">
-    {% csrf_token %}
-    <div class="comparison-select">
-        {% for threat in threats %}
-            <label>
-                <input type="checkbox" name="threats" value="{{ threat.slug }}">
-                {{ threat.name }}
-            </label>
-        {% endfor %}
+    
+    {# Form to select threats to compare. Submits POST request. #}
+    <form method="post">
+        {% csrf_token %}
+        <div class="comparison-select">
+            {# List of checkboxes for all available threats #}
+            {% for threat in threats %}
+                <label>
+                    <input type="checkbox" name="threats" value="{{ threat.slug }}">
+                    {{ threat.name }}
+                </label>
+            {% endfor %}
+        </div>
+        <button type="submit">Compare</button>
+    </form>
+
+    {# Display error message if too many or no threats are selected #}
+    {% if error_message %}
+        <div class="error-message">{{ error_message }}</div>
+    {% endif %}
+
+    {# Comparison table only shown if threats are selected #}
+    {% if selected_threats %}
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Attribute</th>
+                    {% for threat in selected_threats %}
+                        <th>{{ threat.name }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Type</td>
+                    {% for threat in selected_threats %}
+                        <td>{{ threat.threat_type }}</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td>Description</td>
+                    {% for threat in selected_threats %}
+                        <td>{{ threat.description }}</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td>Image</td>
+                    {% for threat in selected_threats %}
+                        <td><img src="{% static 'images/'|add:threat.image %}" width="100"></td>
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
     </div>
-    <button type="submit">Compare</button>
-</form>
+    {% endif %}
 
-{% if error_message %}
-    <div class="error-message">{{ error_message }}</div>
-{% endif %}
-
-{% if selected_threats %}
-<div class="comparison-table">
-    <table>
-        <thead>
-            <tr>
-                <th>Attribute</th>
-                {% for threat in selected_threats %}
-                    <th>{{ threat.name }}</th>
-                {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Type</td>
-                {% for threat in selected_threats %}
-                    <td>{{ threat.threat_type }}</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td>Description</td>
-                {% for threat in selected_threats %}
-                    <td>{{ threat.description }}</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td>Image</td>
-                {% for threat in selected_threats %}
-                    <td><img src="{% static 'images/'|add:threat.image %}" width="100"></td>
-                {% endfor %}
-            </tr>
-        </tbody>
-    </table>
-</div>
-{% endif %}
-
-<div class="back-button">
-    <a href="{% url 'threat_list' %}" class="back-link">← Back to All Threats</a>
+    {# Link to go back to the main threat list page #}
+    <div class="back-button">
+        <a href="{% url 'threat_list' %}" class="back-link">← Back to All Threats</a>
+    </div>
 </div>
 {% endblock %}
-</div>
