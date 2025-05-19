@@ -1,0 +1,103 @@
+{# Extends the base template layout #}
+{% extends 'base.html' %}
+{% load static %}
+
+{# Load custom CSS specific for this page #}
+{% block page_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/threat_list.css' %}">
+{% endblock %}
+
+{# Set the page title #}
+{% block title %}Mango Pests & Diseases - WMO{% endblock %}
+
+{% block content %}
+<div class="search-comparison-container">
+
+    {# Search Form: filters by keyword and category (pest or disease) #}
+    <form method="get" action="" class="search-form">
+        <input type="text" name="q" placeholder="Search pests or diseases..." value="{{ query }}">
+        
+        {# Category dropdown filter #}
+        <select name="category">
+            <option value="">All</option>
+            <option value="pest" {% if threat_type == 'pest' %}selected{% endif %}>Pests</option>
+            <option value="disease" {% if threat_type == 'disease' %}selected{% endif %}>Diseases</option>
+        </select>
+
+        <button type="submit" class="search-btn">Search</button>
+
+        {# Show clear search button only if a query exists #}
+        {% if query %}
+        <button type="submit" name="q" value="" class="clear-search-btn">Clear Search</button>
+        {% endif %}
+    </form>
+
+    {# Compare Threats Button: links to comparison page #}
+    <form action="{% url 'compare_threats' %}" method="get">
+        <button type="submit" class="compare-threat-btn">Compare Threats</button>
+    </form>
+
+    {# Sorting Form: Sort threats by name ascending or descending #}
+    <form method="get" class="sort-form">
+        {# Preserve existing search and category filters during sorting #}
+        <input type="hidden" name="q" value="{{ query }}">
+        <input type="hidden" name="category" value="{{ threat_type }}">
+
+        <label for="sort">Sort by:</label>
+        <select name="sort" id="sort" onchange="this.form.submit()">
+            <option value="name_asc" {% if sort_option == 'name_asc' %}selected{% endif %}>Name (A–Z)</option>
+            <option value="name_desc" {% if sort_option == 'name_desc' %}selected{% endif %}>Name (Z–A)</option>
+        </select>
+    </form>
+</div>
+
+{# Threat List Section: Displays filtered and sorted threats #}
+<div class="threat-list-container">
+    {% for threat in page_obj %}
+        <a href="{% url 'threat_details' threat.slug %}" class="threat-list-item">
+
+            <div class="image-container">
+                {# Dynamically load threat image from static files #}
+                <img src="{% static 'images/'|add:threat.image %}" alt="{{ threat.name }}" class="threat-list-image">
+            </div>
+
+            <div class="threat-content">
+                <div class="dpname">
+                    <p>{{ threat.name }}</p>
+                </div>
+                <div class="dpdesc">
+                    {# Show only the first 10 words of the description #}
+                    {{ threat.description|truncatewords:10 }}
+                </div>
+            </div>
+        </a>
+    {% empty %}
+        <p>No threats found.</p>
+    {% endfor %}
+</div>
+
+{# Pagination Section: Shows current page and navigation links #}
+<div class="pagination-container">
+    <p>
+        Showing {{ start_index }}–{{ end_index }} of {{ total_results }} results:
+        {{ pest_count }} pest{{ pest_count|pluralize }},
+        {{ disease_count }} disease{{ disease_count|pluralize }}.
+    </p>
+
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1&q={{ query }}">« first</a>
+            <a href="?page={{ page_obj.previous_page_number }}&q={{ query }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&q={{ query }}">next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}&q={{ query }}">last »</a>
+        {% endif %}
+    </span>
+</div>
+{% endblock %}

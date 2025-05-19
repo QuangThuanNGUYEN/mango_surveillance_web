@@ -1,0 +1,21 @@
+# Python bytecode files
+__pycache__/
+*.pyc
+*.pyo
+
+# SQLite database file
+db.sqlite3
+
+# Django migrations
+# */migrations/
+
+# Local environment variables (if you're using them)
+.env
+
+# IDE/editor files
+.vscode/
+.idea/
+
+# Django static and media files
+# static/
+# media/

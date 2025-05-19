@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block page_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/about.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="aboutus-container">
+    {% for member in team_members %}
+    <div class="aboutus-item">
+        <img src="{% static 'images/'|add:member.image %}" alt="{{ member.name }} Image" class="aboutus-image">
+        <div class="aboutus-name">{{ member.name }}</div>
+        <div class="aboutus-subname">{{ member.student_id }}</div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

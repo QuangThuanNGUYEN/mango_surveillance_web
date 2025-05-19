@@ -1,0 +1,76 @@
+/* Banner styles */
+.banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: #fff07e;
+    width: 100vw;
+    box-sizing: border-box;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Archivo Black', sans-serif;
+}
+
+.mango-image {
+    width: 100px;
+    height: auto;
+}
+
+.nav-bar {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    margin-right: 20px;
+}
+
+.nav-bar a {
+    font-size: 20px;
+    color: #000000;
+    font-weight: bold;
+    text-decoration: none;
+    font-family: 'Archivo Black', sans-serif;
+}
+
+.nav-bar a:hover {
+    color: #ff9900;
+}
+
+/* Footer styles */
+.site-footer {
+    background-color: #333;
+    color: #fff;
+    padding: 20px 0;
+    text-align: center;
+    font-size: 0.9em;
+    margin: 0;
+}
+
+.site-footer a {
+    color: #ffc107;
+    text-decoration: none;
+    margin: 0 8px;
+}
+
+.site-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Back button styling - used in multiple pages */
+.back-button {
+    margin-top: 20px;
+}
+
+.back-link {
+    color: #ff9900;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
