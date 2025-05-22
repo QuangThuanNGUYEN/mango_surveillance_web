@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Login - World Mango Organisation{% endblock %}
+
+{% block header %}
+    <h4>Login to Your Account</h4>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <form method="post" class="login-form">
+        {% csrf_token %}
+        {% if messages %}
+            {% for message in messages %}
+                <p class="error-message">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+
+        <label for="username">Username:</label>
+        <input type="text" name="username" id="username" required>
+
+        <label for="password">Password:</label>
+        <input type="password" name="password" id="password" required>
+
+        <button type="submit">Login</button>
+    </form>
+    <p>Create an Account Here! <a href="{% url 'register' %}">Create one here</a>.</p>
+</div>
+{% endblock %}

@@ -1,4 +1,5 @@
 from django.urls import re_path
+from . import views
 from .views import HomeView, ThreatListView, ThreatDetailView, AboutView, CompareThreatsView
 
 urlpatterns = [
@@ -12,5 +13,8 @@ urlpatterns = [
     
     re_path(r'^about/$', AboutView.as_view(), name='about'),
     
+    re_path('login/', views.login_view, name='login'),
+    
+    re_path('register/', views.register_view, name='register'),
 
 ]
