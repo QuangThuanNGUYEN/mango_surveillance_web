@@ -8,6 +8,17 @@ body, html {
     height: 100%;
 }
 
+/* Set footer to bottom of page */
+.page-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
 .page-container {
     display: flex;
     flex-direction: column;
