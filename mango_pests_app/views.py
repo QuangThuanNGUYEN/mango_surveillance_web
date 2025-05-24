@@ -299,3 +299,14 @@ def register_view(request):
         form = UserCreationForm()
     
     return render(request, 'mango_pests_app/register.html', {'form': form})
+
+#Crud Page
+
+class CrudView(TemplateView):
+    template_name = 'crud_template.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add crud functionality here
+        context['message'] = 'Insert Crud Functionality here!'
+        return context
