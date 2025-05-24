@@ -1,5 +1,5 @@
 from django.urls import re_path
-from .views import HomeView, ThreatListView, ThreatDetailView, AboutView, CompareThreatsView, CrudView
+from .views import HomeView, ThreatListView, ThreatDetailView, AboutView, CrudView, CompareThreatsView
 
 urlpatterns = [
     re_path(r'^$', HomeView.as_view(), name='home'),
