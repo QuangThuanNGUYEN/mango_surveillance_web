@@ -269,3 +269,14 @@ class AboutView(TemplateView):
             {'name': 'Spencer Siu', 'student_id': 'S344930', 'image': 'aboutspencer.png'}
         ]
         return context
+
+#Crud Page
+
+class CrudView(TemplateView):
+    template_name = 'crud_template.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add crud functionality here
+        context['message'] = 'Insert Crud Functionality here!'
+        return context
