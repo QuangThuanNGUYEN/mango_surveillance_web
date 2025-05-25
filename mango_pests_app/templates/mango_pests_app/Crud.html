@@ -8,18 +8,43 @@
 {% block content %}
 
 <div class="crud-container">
-    <h1>test</h1>
-    <p>In a hole in the ground there lived a hobbit.<br>
-        Not a nasty<br>
-        dirty<br>
-        wet hole<br>
-        filled with the ends of worms and an oozy smell<br>
-        nor yet a dry<br>
-        bare<br>
-        sandy hole with nothing in it to sit down on or to eat:<br>
-        it was a hobbit-hole<br>
-        and that means comfort.<br>
-    </p>
+    <h2 style="text-align: center;">Crud Functionality</h2>
+    <table class="grid-table">
+        <!--
+        Remove below and replace with crud functionality
+        replace names with crud table
+      <thead>
+        <tr>
+          <td>CRUD</td>
+          <td>Artificer</td><td>Barbarian</td><td>Bard</td><td>Cleric</td><td>Druid</td>
+          <td>Fighter</td><td>Monk</td><td>Paladin</td><td>Ranger</td><td>Rogue</td>
+          <td>Sorcerer</td><td>Warlock</td><td>Wizard</td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Artificer</td><td>---</td><td>Bombardier</td><td>Muse</td><td>Revelator</td><td>Symmetric</td><td>Warsmith</td><td>Chak-pur</td><td>Skysculptor</td><td>Wildforge</td><td>Deviser</td><td>Actualizer</td><td>Dreamcraft</td><td>Mastermind</td></tr>
+        <tr><td>Barbarian</td><td>Bombardier</td><td>---</td><td>Skald</td><td>Fanatic</td><td>Cataclysmist</td><td>Gladiator</td><td>Rikishi</td><td>Conquistador</td><td>Trailtusk</td><td>Enforcer</td><td>Juggernaut</td><td>Executioner</td><td>Decimator</td></tr>
+        <tr><td>Bard</td><td>Muse</td><td>Skald</td><td>---</td><td>Precentor</td><td>Windwhisperer</td><td>Mehter</td><td>Komusō</td><td>Battlehymn</td><td>Minstrel</td><td>Nightingale</td><td>Soulsong</td><td>Herald</td><td>Lorekeeper</td></tr>
+        <tr><td>Cleric</td><td>Revelator</td><td>Fanatic</td><td>Precentor</td><td>---</td><td>Shaman</td><td>Zealot</td><td>Sage</td><td>Exemplar</td><td>Hajji</td><td>Cardinalite</td><td>Paragon</td><td>Voodoo</td><td>Cardinal</td></tr>
+        <tr><td>Druid</td><td>Symmetric</td><td>Cataclysmist</td><td>Windwhisperer</td><td>Shaman</td><td>---</td><td>Ironfang</td><td>Oracle</td><td>Forestguard</td><td>Willowstalker</td><td>Lealearned</td><td>Elementalist</td><td>Hallowmarked</td><td>Seer</td></tr>
+        <tr><td>Fighter</td><td>Warsmith</td><td>Gladiator</td><td>Mehter</td><td>Zealot</td><td>Ironfang</td><td>---</td><td>Shaolin</td><td>Crusader</td><td>Yeoman</td><td>Mercenary</td><td>Battlemage</td><td>Champion</td><td>Mageblade</td></tr>
+        <tr><td>Monk</td><td>Chak-pur</td><td>Rikishi</td><td>Komusō</td><td>Sage</td><td>Oracle</td><td>Shaolin</td><td>---</td><td>Sōhei</td><td>Wayfarer</td><td>Ninja</td><td>Shakti</td><td>Vassalguard</td><td>Guru</td></tr>
+        <tr><td>Paladin</td><td>Skysculptor</td><td>Conquistador</td><td>Battlehymn</td><td>Exemplar</td><td>Forestguard</td><td>Crusader</td><td>Sōhei</td><td>---</td><td>Vigilant</td><td>Inquisitor</td><td>Fatalist</td><td>Myrmidon</td><td>Spellsword</td></tr>
+        <tr><td>Ranger</td><td>Wildforge</td><td>Trailtusk</td><td>Minstrel</td><td>Hajji</td><td>Willowstalker</td><td>Yeoman</td><td>Wayfarer</td><td>Vigilant</td><td>---</td><td>Brigand</td><td>Sojourner</td><td>Woedrifter</td><td>Truthseeker</td></tr>
+        <tr><td>Rogue</td><td>Deviser</td><td>Enforcer</td><td>Nightingale</td><td>Cardinalite</td><td>Lealearned</td><td>Mercenary</td><td>Ninja</td><td>Inquisitor</td><td>Brigand</td><td>---</td><td>Magus</td><td>Fatestealer</td><td>Shadowmaster</td></tr>
+        <tr><td>Sorcerer</td><td>Actualizer</td><td>Juggernaut</td><td>Soulsong</td><td>Paragon</td><td>Elementalist</td><td>Battlemage</td><td>Shakti</td><td>Fatalist</td><td>Sojourner</td><td>Magus</td><td>---</td><td>Witch</td><td>Magician</td></tr>
+        <tr><td>Warlock</td><td>Dreamcraft</td><td>Executioner</td><td>Herald</td><td>Voodoo</td><td>Hallowmarked</td><td>Champion</td><td>Vassalguard</td><td>Myrmidon</td><td>Woedrifter</td><td>Fatestealer</td><td>Witch</td><td>---</td><td>Theurgist</td></tr>
+        <tr><td>Wizard</td><td>Mastermind</td><td>Decimator</td><td>Lorekeeper</td><td>Cardinal</td><td>Seer</td><td>Mageblade</td><td>Guru</td><td>Spellsword</td><td>Truthseeker</td><td>Shadowmaster</td><td>Magician</td><td>Theurgist</td><td>---</td></tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td>Official Classes</td>
+          <td>Artificer</td><td>Barbarian</td><td>Bard</td><td>Cleric</td><td>Druid</td>
+          <td>Fighter</td><td>Monk</td><td>Paladin</td><td>Ranger</td><td>Rogue</td>
+          <td>Sorcerer</td><td>Warlock</td><td>Wizard</td>
+        </tr>
+      </tfoot>-->
+    </table>
 </div>
 
 {% endblock %}
