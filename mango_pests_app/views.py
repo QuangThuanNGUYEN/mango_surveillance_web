@@ -18,6 +18,8 @@ from .forms import (
     SurveillanceRecordForm, ThreatSearchForm, UserRegistrationForm
 )
 
+from django.db.models import Q  
+from .data import mango_threats  
 
 # Home Page
 class HomeView(TemplateView):
@@ -40,72 +42,125 @@ class HomeView(TemplateView):
 
 
 # Threat List Page with improved filtering and search
-class ThreatListView(ListView):
-    """
-    Enhanced ListView for displaying mango threats with search, filtering, and sorting.
-    """
-    model = MangoThreat
-    template_name = 'mango_pests_app/threat_list.html'
-    context_object_name = 'threats'
-    paginate_by = 10
+# class ThreatListView(ListView):
+#     """
+#     Enhanced ListView for displaying mango threats with search, filtering, and sorting.
+#     """
+#     model = MangoThreat
+#     template_name = 'mango_pests_app/threat_list.html'
+#     context_object_name = 'threats'
+#     paginate_by = 10
 
-    def get_queryset(self):
-        queryset = MangoThreat.objects.all()
+#     def get_queryset(self):
+#         queryset = MangoThreat.objects.all()
         
-        # Search functionality
-        query = self.request.GET.get('q', '').strip()
-        if query:
-            queryset = queryset.filter(
-                Q(name__icontains=query) | 
-                Q(description__icontains=query) |
-                Q(details__icontains=query)
-            )
+#         # Search functionality
+#         query = self.request.GET.get('q', '').strip()
+#         if query:
+#             queryset = queryset.filter(
+#                 Q(name__icontains=query) | 
+#                 Q(description__icontains=query) |
+#                 Q(details__icontains=query)
+#             )
         
-        # Category filtering
-        category = self.request.GET.get('category', '').strip()
-        if category in ['pest', 'disease']:
-            queryset = queryset.filter(threat_type=category)
+#         # Category filtering
+#         category = self.request.GET.get('category', '').strip()
+#         if category in ['pest', 'disease']:
+#             queryset = queryset.filter(threat_type=category)
         
-        # Sorting
-        sort_option = self.request.GET.get('sort', 'name_asc')
-        if sort_option == 'name_desc':
-            queryset = queryset.order_by('-name')
-        elif sort_option == 'created_desc':
-            queryset = queryset.order_by('-created_at')
-        elif sort_option == 'created_asc':
-            queryset = queryset.order_by('created_at')
-        else:  # name_asc
-            queryset = queryset.order_by('name')
+#         # Sorting
+#         sort_option = self.request.GET.get('sort', 'name_asc')
+#         if sort_option == 'name_desc':
+#             queryset = queryset.order_by('-name')
+#         elif sort_option == 'created_desc':
+#             queryset = queryset.order_by('-created_at')
+#         elif sort_option == 'created_asc':
+#             queryset = queryset.order_by('created_at')
+#         else:  # name_asc
+#             queryset = queryset.order_by('name')
             
-        return queryset
+#         return queryset
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+        
+#         # Preserve query parameters for pagination
+#         query = self.request.GET.get('q', '')
+#         category = self.request.GET.get('category', '')
+#         sort_option = self.request.GET.get('sort', 'name_asc')
+        
+#         context.update({
+#             'query': query,
+#             'threat_type': category,
+#             'sort_option': sort_option,
+#             'search_form': ThreatSearchForm(initial={
+#                 'query': query,
+#                 'category': category,
+#                 'sort': sort_option
+#             })
+#         })
+        
+#         # Count threats by type for current queryset
+#         threats = self.get_queryset()
+#         context['pest_count'] = threats.filter(threat_type='pest').count()
+#         context['disease_count'] = threats.filter(threat_type='disease').count()
+#         context['total_results'] = threats.count()
+        
+#         return context
+
+
+class ThreatListView(TemplateView):
+    template_name = 'mango_pests_app/threat_list.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
-        # Preserve query parameters for pagination
-        query = self.request.GET.get('q', '')
+
+        # === Initial data ===
+        threats = mango_threats
+
+        # === Search ===
+        query = self.request.GET.get('q', '').strip().lower()
+        if query:
+            threats = [
+                t for t in threats
+                if query in t.name.lower() or query in t.description.lower()
+            ]
+
+        # === Category filter ===
         category = self.request.GET.get('category', '')
+        if category in ['pest', 'disease']:
+            threats = [t for t in threats if t.threat_type == category]
+
+        # === Sort ===
         sort_option = self.request.GET.get('sort', 'name_asc')
-        
+        if sort_option == 'name_desc':
+            threats.sort(key=lambda t: t.name, reverse=True)
+        else:
+            threats.sort(key=lambda t: t.name)
+
+        # === Pagination ===
+        paginator = Paginator(threats, 10)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        # === Count info ===
+        pest_count = len([t for t in threats if t.threat_type == 'pest'])
+        disease_count = len([t for t in threats if t.threat_type == 'disease'])
+
+        # === Context ===
         context.update({
+            'page_obj': page_obj,
             'query': query,
             'threat_type': category,
             'sort_option': sort_option,
-            'search_form': ThreatSearchForm(initial={
-                'query': query,
-                'category': category,
-                'sort': sort_option
-            })
+            'pest_count': pest_count,
+            'disease_count': disease_count,
+            'total_results': len(threats),
+            'start_index': page_obj.start_index(),
+            'end_index': page_obj.end_index(),
         })
-        
-        # Count threats by type for current queryset
-        threats = self.get_queryset()
-        context['pest_count'] = threats.filter(threat_type='pest').count()
-        context['disease_count'] = threats.filter(threat_type='disease').count()
-        context['total_results'] = threats.count()
-        
-        return context
 
+        return context
 
 # Threat Detail Page
 class ThreatDetailView(DetailView):
