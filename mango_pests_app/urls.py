@@ -23,7 +23,7 @@ urlpatterns = [
     path('about/', AboutView.as_view(), name='about'),
     path('login/', views.login_view, name='login'),
     path('register/', views.register_view, name='register'),
-    path(r'^logout/$', views.logout_view, name='logout'),
+    path('logout/', views.logout_view, name='logout'),
     
     # CRUD Dashboard
     path('crud/', CrudDashboardView.as_view(), name='crud_dashboard'),
