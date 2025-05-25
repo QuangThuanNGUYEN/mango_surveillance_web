@@ -1,8 +1,9 @@
 # urls.py
 from django.urls import re_path, path
+from . import views
 from .views import (
     HomeView, ThreatListView, ThreatDetailView, AboutView, 
-    CompareThreatsView, CrudDashboardView, CrudView,
+    CompareThreatsView, CrudDashboardView, CrudView, 
     # Threat CRUD
     ThreatCreateView, ThreatUpdateView, ThreatDeleteView,
     # Location CRUD  
@@ -20,6 +21,9 @@ urlpatterns = [
     path('threat_list/<slug:threat_name>/', ThreatDetailView.as_view(), name='threat_details'),
     path('compare/', CompareThreatsView.as_view(), name='compare_threats'),
     path('about/', AboutView.as_view(), name='about'),
+    path('login/', views.login_view, name='login'),
+    path('register/', views.register_view, name='register'),
+    path(r'^logout/$', views.logout_view, name='logout'),
     
     # CRUD Dashboard
     path('crud/', CrudDashboardView.as_view(), name='crud_dashboard'),

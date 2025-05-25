@@ -10,11 +10,12 @@ from django.urls import reverse_lazy, reverse
 from django.http import JsonResponse
 from django.db.models import Q
 from django.core.paginator import Paginator
+from django.contrib.auth import logout, login, authenticate
 
 from .models import MangoThreat, Location, MangoTree, SurveillanceRecord, Grower
 from .forms import (
     MangoThreatForm, LocationForm, MangoTreeForm, 
-    SurveillanceRecordForm, ThreatSearchForm
+    SurveillanceRecordForm, ThreatSearchForm, UserRegistrationForm
 )
 
 
@@ -329,3 +330,50 @@ class CrudView(LoginRequiredMixin, TemplateView):
     """
     def get(self, request, *args, **kwargs):
         return redirect('crud_dashboard')
+    
+    #Login Page
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None:
+            login(request, user)
+            return redirect('home') 
+        else:
+            messages.error(request, 'Invalid username or password.')
+
+    return render(request, 'mango_pests_app/login.html')
+
+#Register Page
+def register_view(request):
+    if request.method == 'POST':
+        form = UserRegistrationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('login')  
+    else:
+        form = UserRegistrationForm()
+    return render(request, 'mango_pests_app/register.html', {'form': form})
+
+#Logout View
+def logout_view(request):
+    logout(request)
+    return redirect('home') 
+
+class CrudView(LoginRequiredMixin, TemplateView):
+    template_name = 'mango_pests_app/crud.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Get current user's grower record
+        grower = Grower.objects.filter(user=self.request.user).first()
+
+        locations = Location.objects.all()
+        mango_trees = MangoTree.objects.all()
+
+        context['grower'] = grower
+        context['locations'] = locations
+        context['mango_trees'] = mango_trees
+        return context
