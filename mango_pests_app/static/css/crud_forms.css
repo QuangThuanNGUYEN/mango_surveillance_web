@@ -1,0 +1,79 @@
+.crud-form-wrapper {
+  max-width: 600px;
+  margin: 2rem auto;
+  background-color: #fafafa;
+  padding: 2rem 2.5rem;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #2b3a42;
+}
+
+.crud-form-title {
+  margin-bottom: 1.2rem;
+}
+
+.crud-form p {
+  margin-bottom: 1.2rem;
+}
+
+.crud-form label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: #444;
+}
+
+.crud-form input[type="text"],
+.crud-form input[type="email"],
+.crud-form input[type="number"],
+.crud-form select,
+.crud-form textarea {
+  width: 100%;
+  padding: 0.45rem 0.75rem;
+  border: 1.8px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.25s ease;
+}
+
+.crud-form input[type="text"]:focus,
+.crud-form input[type="email"]:focus,
+.crud-form input[type="number"]:focus,
+.crud-form select:focus,
+.crud-form textarea:focus {
+  border-color: #556270;  /* match dashboard green */
+  outline: none;
+}
+
+.btn {
+  display: inline-block;
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: 4px;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.btn-submit {
+  background-color: #556270;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  margin-top: 1rem;
+}
+
+.btn-submit:hover {
+  background-color: #556270;
+}
+
+.btn-back {
+  display: inline-block;
+  margin-top: 1rem;
+  color: #556270;
+}
+
+.btn-back:hover {
+  color: #556270;
+  text-decoration: underline;
+}

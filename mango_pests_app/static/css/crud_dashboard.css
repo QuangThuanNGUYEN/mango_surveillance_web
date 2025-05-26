@@ -1,0 +1,123 @@
+/* ===== CRUD Dashboard Styles (Scoped) ===== */
+.crud-dashboard {
+  max-width: 1000px;        /* Limit width for better focus */
+  margin: 2rem auto;        /* Center on page with vertical spacing */
+  padding: 1.5rem 2rem;
+  background-color: #fafafa; /* Soft off-white background */
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* subtle shadow */
+  color: #333;              /* Darker, but soft text color */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.crud-dashboard h1,
+.crud-dashboard h2 {
+  color: #222831; /* Dark charcoal */
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.crud-dashboard .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #ddd;
+  padding-bottom: 0.3rem;
+}
+
+.crud-dashboard .btn {
+  background-color: #556270; /* muted slate blue/gray */
+  color: #eee;
+  padding: 8px 16px;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 2px 4px rgba(85, 98, 112, 0.3);
+}
+
+.crud-dashboard .btn:hover {
+  background-color: #394a54;
+  box-shadow: 0 4px 8px rgba(57, 74, 84, 0.5);
+}
+
+.crud-dashboard table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px; /* vertical spacing between rows */
+  margin-bottom: 2.5rem;
+}
+
+.crud-dashboard th, 
+.crud-dashboard td {
+  padding: 12px 16px;
+  text-align: left;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border-radius: 6px;
+  vertical-align: middle;
+  color: #444;
+}
+
+.crud-dashboard th {
+  background-color: transparent;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #555;
+  box-shadow: none;
+  border-bottom: none;
+}
+
+.crud-dashboard tr:hover td {
+  background-color: #e8f0fe; /* subtle light blue highlight */
+}
+
+.crud-dashboard ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.crud-dashboard li {
+  background: #fefefe;
+  margin-bottom: 0.6rem;
+  padding: 12px 16px;
+  border-left: 5px solid #556270;
+  border-radius: 5px;
+  color: #555;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* Responsive tweaks */
+@media (max-width: 1024px) {
+  .crud-dashboard {
+    max-width: 90%;
+    padding: 1rem 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .crud-dashboard table, 
+  .crud-dashboard th, 
+  .crud-dashboard td {
+    font-size: 0.9rem;
+    padding: 10px 12px;
+  }
+
+  .crud-dashboard .btn {
+    font-size: 0.85rem;
+    padding: 6px 12px;
+  }
+
+  .crud-dashboard .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .crud-dashboard .section-header a.btn {
+    margin-top: 0.6rem;
+  }
+}

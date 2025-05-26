@@ -1,14 +1,24 @@
 {% extends "base.html" %}
-{% block content %}
-  <h2>{% if object %}Edit{% else %}Create{% endif %} Threat</h2>
-  <form method="post" novalidate>
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Save Threat</button>
-  </form>
-  <a href="{% url 'threat_list' %}">Back to Threat List</a>
+{% load static %}
 
-  <a href="{% url 'crud_dashboard' %}" class="btn btn-primary mb-3">
-    ← Back to Dashboard
-  </a>
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/crud_forms.css' %}">
+{% endblock %}
+
+
+{% block content %}
+  <div class="crud-form-wrapper">
+    <h2 class="crud-form-title">{% if object %}Edit{% else %}Create{% endif %} Threat</h2>
+    <form method="post" novalidate class="crud-form">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-submit">Save Threat</button>
+    </form>
+
+    <a href="{% url 'threat_list' %}" class="btn btn-back">← Threat List</a>
+
+    <a href="{% url 'crud_dashboard' %}" class="btn btn-back" style="margin-left: 1rem;">
+      ← Back to Dashboard
+    </a>
+  </div>
 {% endblock %}

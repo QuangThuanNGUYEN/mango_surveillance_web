@@ -7,7 +7,13 @@
     <title>{% block title %}WMO - World Mango Organisation{% endblock %}</title>
     <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+    <head>
+    {% block page_css %}{% endblock %}
 </head>
+
+</head>
+
+
 <body>
     <div class="page-container">
 

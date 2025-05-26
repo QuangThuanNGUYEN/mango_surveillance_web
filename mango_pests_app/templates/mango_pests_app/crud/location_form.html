@@ -1,10 +1,24 @@
 {% extends "base.html" %}
 {% block content %}
-  <h2>{% if object %}Edit{% else %}Create{% endif %} Location</h2>
-  <form method="post" novalidate>
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Save Location</button>
-  </form>
-  <a href="{% url 'location_list' %}">Back to Locations</a>
+{% load static %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/crud_forms.css' %}">
+{% endblock %}
+
+  <div class="crud-form-wrapper">
+    <h2 class="crud-form-title">{% if object %}Edit{% else %}Create{% endif %} Location</h2>
+    <form method="post" novalidate class="crud-form">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-submit">Save Location</button>
+    </form>
+    <a href="{% url 'location_list' %}" class="btn btn-back">← Back to Location List</a>
+
+    <a href="{% url 'crud_dashboard' %}" class="btn btn-back" style="margin-left: 1rem;">
+      ← Back to Dashboard
+    </a>
+  </div>
+
+  
 {% endblock %}

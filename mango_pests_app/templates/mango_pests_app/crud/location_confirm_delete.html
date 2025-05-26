@@ -1,10 +1,18 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/crud_forms.css' %}">
+{% endblock %}
+
 {% block content %}
-  <h2>Delete Location?</h2>
-  <p>Are you sure you want to delete "{{ object.name }}"?</p>
-  <form method="post">
-    {% csrf_token %}
-    <button type="submit">Yes, delete</button>
-    <a href="{% url 'location_list' %}">Cancel</a>
-  </form>
+  <div class="crud-form-wrapper">
+    <h2>Delete Location?</h2>
+    <p>Are you sure you want to delete "{{ object.name }}"?</p>
+    <form method="post" class="crud-form">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-submit btn-danger">Yes, delete</button>
+      <a href="{% url 'location_list' %}" class="btn btn-back">Cancel</a>
+    </form>
+  </div>
 {% endblock %}

@@ -527,3 +527,78 @@ threat-description {
     padding: 10px;
     text-align: left;
 }
+
+
+
+/* ===== CRUD Dashboard Styles (Scoped) ===== */
+.crud-dashboard h1,
+.crud-dashboard h2 {
+  color: #2b3a42;
+  margin-bottom: 0.5rem;
+}
+
+.crud-dashboard .btn {
+  background-color: #4CAF50;
+  color: white;
+  padding: 6px 12px;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.crud-dashboard .btn:hover {
+  background-color: #45a049;
+}
+
+.crud-dashboard table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+}
+
+.crud-dashboard th, 
+.crud-dashboard td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.crud-dashboard th {
+  background-color: #f2f2f2;
+}
+
+.crud-dashboard tr:hover {
+  background-color: #f9f9f9;
+}
+
+.crud-dashboard ul {
+  list-style: none;
+  padding: 0;
+}
+
+.crud-dashboard li {
+  background: #f4f4f4;
+  margin-bottom: 0.5rem;
+  padding: 8px 12px;
+  border-left: 4px solid #4CAF50;
+}
+
+/* Mobile Responsive tweaks */
+@media (max-width: 768px) {
+  .crud-dashboard table, 
+  .crud-dashboard th, 
+  .crud-dashboard td {
+    font-size: 0.85rem;
+  }
+
+  .crud-dashboard .btn {
+    font-size: 0.8rem;
+    padding: 5px 10px;
+  }
+}
+
+
+.crud-dashboard {
+  background-color: rgba(255, 0, 0, 0.1); /* Light red for visibility */
+  border: 2px dashed red;
+}
