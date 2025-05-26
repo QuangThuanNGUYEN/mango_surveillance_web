@@ -6,15 +6,129 @@
 {% endblock %}
 
 {% block content %}
-  <div class="crud-form-wrapper">
+<div class="crud-form-wrapper">
     <h2 class="crud-form-title">{% if object %}Edit{% else %}Create{% endif %} Mango Tree</h2>
-    <form method="post" novalidate class="crud-form">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit" class="btn btn-submit">Save Mango Tree</button>
-    </form>
-    <a href="{% url 'crud_dashboard' %}" class="btn btn-back" style="margin-left: 1rem;">
-      ← Back to Dashboard
-    </a>
-  </div>
+    
+    <!-- Check if user has locations -->
+    {% if user_locations_count == 0 %}
+        <div class="alert alert-warning" style="margin-bottom: 2rem; padding: 1rem; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px;">
+            <h4 style="color: #856404; margin-bottom: 0.5rem;">⚠️ No Locations Available</h4>
+            <p style="color: #856404; margin-bottom: 1rem;">You need to create a location first before adding trees.</p>
+            <a href="{% url 'location_create' %}" class="btn btn-submit" style="margin-right: 1rem;">
+                📍 Create Location First
+            </a>
+            <a href="{% url 'surveillance_calculator' %}" class="btn btn-back">
+                ← Back to Calculator
+            </a>
+        </div>
+    {% else %}
+        <!-- Show the form if user has locations -->
+        <form method="post" novalidate class="crud-form">
+            {% csrf_token %}
+            
+            <!-- Enhanced form fields with better labels -->
+            <div class="form-group">
+                <label for="{{ form.location.id_for_label }}">📍 Location *</label>
+                {{ form.location }}
+                {% if form.location.errors %}
+                    <div class="form-error">{{ form.location.errors.0 }}</div>
+                {% endif %}
+                <small class="form-help">Select from your {{ user_locations_count }} location{{ user_locations_count|pluralize }}</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.tree_id.id_for_label }}">🏷️ Tree ID *</label>
+                {{ form.tree_id }}
+                {% if form.tree_id.errors %}
+                    <div class="form-error">{{ form.tree_id.errors.0 }}</div>
+                {% endif %}
+                <small class="form-help">Unique identifier (e.g., A001, Block1-Tree15)</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.age.id_for_label }}">📅 Age (years) *</label>
+                {{ form.age }}
+                {% if form.age.errors %}
+                    <div class="form-error">{{ form.age.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.variety.id_for_label }}">🌱 Variety *</label>
+                {{ form.variety }}
+                {% if form.variety.errors %}
+                    <div class="form-error">{{ form.variety.errors.0 }}</div>
+                {% endif %}
+                <small class="form-help">e.g., Kensington Pride, Calypso, R2E2</small>
+            </div>
+            
+            <!-- Surveillance impact info -->
+            <div class="info-box" style="margin: 1.5rem 0; padding: 1rem; background: #e7f3ff; border-left: 4px solid #007bff; border-radius: 5px;">
+                <strong>🧮 Surveillance Impact:</strong> 
+                Each tree adds approximately 6 minutes to your surveillance time.
+            </div>
+            
+            <button type="submit" class="btn btn-submit">
+                💾 Save Mango Tree
+            </button>
+        </form>
+        
+        <!-- Action buttons -->
+        <div style="margin-top: 1rem;">
+            <a href="{% url 'surveillance_calculator' %}" class="btn btn-back" style="margin-right: 1rem;">
+                ← Back to Calculator
+            </a>
+            {% if not object %}
+                <a href="{% url 'location_create' %}" class="btn btn-secondary" style="background: #6c757d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                    📍 Add Location
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+<style>
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.form-error {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.form-help {
+    display: block;
+    margin-top: 0.25rem;
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.info-box {
+    font-size: 0.9rem;
+}
+
+.btn-secondary {
+    display: inline-block;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: #5a6268 !important;
+}
+
+.alert {
+    border-radius: 5px;
+}
+</style>
 {% endblock %}

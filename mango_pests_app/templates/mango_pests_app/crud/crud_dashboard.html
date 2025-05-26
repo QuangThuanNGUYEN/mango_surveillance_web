@@ -1,114 +1,304 @@
-{% extends "base.html" %}
-{% block content %}
-{% load static%}
+{% extends 'base.html' %}
+{% load static %}
 
-{# Load page-specific CSS #}
-{% block page_css %}
-<link rel="stylesheet" type="text/css" href="{% static 'css/crud_dashboard.css' %}">
+{% block title %}CRUD Dashboard - Mango Surveillance{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        transition: transform 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .action-btn {
+        margin: 5px;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+    }
+    
+    .action-btn:hover {
+        transform: scale(1.05);
+    }
+    
+    .recent-item {
+        border-left: 4px solid #007bff;
+        margin-bottom: 10px;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 5px;
+    }
+    
+    .auto-refresh {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.7; }
+        100% { opacity: 1; }
+    }
+</style>
 {% endblock %}
 
-<div class="crud-dashboard container">
-
-  <h1 class="dashboard-title">Mango Farmer Dashboard</h1>
-
-  <!-- THREATS -->
-  <section class="crud-section">
-    <div class="section-header">
-      <h2>Threats</h2>
-      <a href="{% url 'threat_create' %}" class="btn btn-success">Add New Threat</a>
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header with Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-4 mb-0">📊 CRUD Dashboard</h1>
+                    <p class="lead text-muted">Manage your mango surveillance data</p>
+                </div>
+                <div>
+                    <a href="{% url 'surveillance_calculator' %}" class="btn btn-success btn-lg">
+                        🧮 Surveillance Calculator
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
-    <table class="table crud-table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for threat in recent_threats %}
-        <tr>
-          <td>{{ threat.name }}</td>
-          <td>{{ threat.threat_type }}</td>
-          <td>
-            <a href="{% url 'threat_update' threat.slug %}" class="btn btn-sm btn-warning">Edit</a>
-            <a href="{% url 'threat_delete' threat.slug %}" class="btn btn-sm btn-danger">Delete</a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </section>
 
-  <!-- LOCATIONS -->
-  <section class="crud-section">
-    <div class="section-header">
-      <h2>Locations</h2>
-      <a href="{% url 'location_create' %}" class="btn btn-success">Add New Location</a>
+    <!-- Statistics Cards -->
+    <div class="row mb-4" id="stats-container">
+        <div class="col-md-2">
+            <div class="card stat-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-bug fa-2x mb-2"></i>
+                    <h3 id="total-threats-count">{{ stats.total_threats }}</h3>
+                    <p class="mb-0">Total Threats</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card stat-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-spider fa-2x mb-2"></i>
+                    <h3 id="pest-count">{{ stats.total_pests }}</h3>
+                    <p class="mb-0">Pests</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card stat-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-virus fa-2x mb-2"></i>
+                    <h3 id="disease-count">{{ stats.total_diseases }}</h3>
+                    <p class="mb-0">Diseases</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card stat-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-map-marker-alt fa-2x mb-2"></i>
+                    <h3 id="location-count">{{ stats.total_locations }}</h3>
+                    <p class="mb-0">Locations</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card stat-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-tree fa-2x mb-2"></i>
+                    <h3 id="tree-count">{{ stats.total_trees }}</h3>
+                    <p class="mb-0">Trees</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card stat-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-sync fa-2x mb-2 auto-refresh" id="refresh-icon"></i>
+                    <button class="btn btn-light btn-sm" onclick="refreshDashboard()">
+                        Refresh
+                    </button>
+                    <p class="mb-0 small">Live Data</p>
+                </div>
+            </div>
+        </div>
     </div>
-    <table class="table crud-table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for loc in recent_locations %}
-        <tr>
-          <td>{{ loc.name }}</td>
-          <td>
-            <a href="{% url 'location_update' loc.pk %}" class="btn btn-sm btn-warning">Edit</a>
-            <a href="{% url 'location_delete' loc.pk %}" class="btn btn-sm btn-danger">Delete</a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </section>
 
-  <!-- TREES -->
-  <section class="crud-section">
-    <div class="section-header">
-      <h2>Mango Trees</h2>
-      <a href="{% url 'tree_create' %}" class="btn btn-success">Add New Tree</a>
+    <!-- Quick Actions with Better Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>⚡ Quick Actions</h4>
+                </div>
+                <div class="card-body text-center">
+                    <!-- Primary Actions -->
+                    <div class="btn-group mb-3" role="group">
+                        <a href="{% url 'surveillance_calculator' %}" class="btn btn-success action-btn">
+                            🧮 Surveillance Calculator
+                        </a>
+                        <a href="{% url 'analytics' %}" class="btn btn-info action-btn">
+                            📈 Analytics Dashboard
+                        </a>
+                        <a href="{% url 'threat_list' %}" class="btn btn-warning action-btn">
+                            🔍 View All Threats
+                        </a>
+                    </div>
+                    
+                    <br>
+                    
+                    <!-- CRUD Actions -->
+                    <div class="btn-group mb-2" role="group">
+                        <a href="{% url 'location_create' %}" class="btn btn-primary action-btn">
+                            ➕ Add Location
+                        </a>
+                        <a href="{% url 'tree_create' %}" class="btn btn-success action-btn">
+                            🌳 Add Tree
+                        </a>
+                        <a href="{% url 'threat_create' %}" class="btn btn-danger action-btn">
+                            ⚠️ Add Threat
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <table class="table table-striped crud-table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Location</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for tree in recent_trees %}
-        <tr>
-          <td>{{ tree.id }}</td>
-          <td>{{ tree.location.name }}</td>
-          <td>
-            <a href="{% url 'tree_update' tree.id %}" class="btn btn-sm btn-warning">Edit</a>
-            <a href="{% url 'tree_delete' tree.id %}" class="btn btn-sm btn-danger">Delete</a>
-          </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="3">No trees found.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </section>
 
-  <!-- STATS -->
-  <section class="crud-section stats-section">
-    <h2>Statistics</h2>
-    <ul class="stats-list">
-      <li><strong>Total Threats:</strong> {{ stats.total_threats }}</li>
-      <li><strong>Total Pests:</strong> {{ stats.total_pests }}</li>
-      <li><strong>Total Diseases:</strong> {{ stats.total_diseases }}</li>
-      <li><strong>Total Locations:</strong> {{ stats.total_locations }}</li>
-      <li><strong>Total Trees:</strong> {{ stats.total_trees }}</li>
-    </ul>
-  </section>
+    <!-- Recent Items with Edit/Delete Buttons -->
+    <div class="row">
+        <!-- Recent Threats -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <h5>🔥 Recent Threats</h5>
+                    <a href="{% url 'threat_create' %}" class="btn btn-sm btn-danger">+ Add</a>
+                </div>
+                <div class="card-body" id="recent-threats-container">
+                    {% for threat in recent_threats %}
+                    <div class="recent-item border rounded p-2 mb-2">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ threat.name }}</h6>
+                                <p class="mb-1 small">{{ threat.description|truncatewords:10 }}</p>
+                                <div class="d-flex justify-content-between">
+                                    <span class="badge bg-{% if threat.threat_type == 'pest' %}warning{% else %}danger{% endif %}">
+                                        {{ threat.get_threat_type_display }}
+                                    </span>
+                                    <small class="text-muted">{{ threat.created_at|date:"M d" }}</small>
+                                </div>
+                            </div>
+                            <div class="btn-group-vertical btn-group-sm" role="group">
+                                <a href="{% url 'threat_update' threat.slug %}" class="btn btn-outline-primary btn-sm" title="Edit">
+                                    ✏️
+                                </a>
+                                <a href="{% url 'threat_delete' threat.slug %}" class="btn btn-outline-danger btn-sm" 
+                                   onclick="return confirm('Delete {{ threat.name }}?')" title="Delete">
+                                    🗑️
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No threats yet. <a href="{% url 'threat_create' %}">Add one?</a></p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
 
+        <!-- Recent Locations -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <h5>📍 Recent Locations</h5>
+                    <a href="{% url 'location_create' %}" class="btn btn-sm btn-primary">+ Add</a>
+                </div>
+                <div class="card-body" id="recent-locations-container">
+                    {% for location in recent_locations %}
+                    <div class="recent-item border rounded p-2 mb-2">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ location.name }}</h6>
+                                <p class="mb-1 small text-muted">{{ location.address|truncatewords:8 }}</p>
+                                <span class="badge bg-info">{{ location.mango_trees.count }} trees</span>
+                            </div>
+                            <div class="btn-group-vertical btn-group-sm" role="group">
+                                <a href="{% url 'location_update' location.pk %}" class="btn btn-outline-primary btn-sm" title="Edit">
+                                    ✏️
+                                </a>
+                                <a href="{% url 'location_delete' location.pk %}" class="btn btn-outline-danger btn-sm" 
+                                   onclick="return confirm('Delete {{ location.name }}?')" title="Delete">
+                                    🗑️
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No locations yet. <a href="{% url 'location_create' %}">Add one?</a></p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Trees -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <h5>🌳 Recent Trees</h5>
+                    <a href="{% url 'tree_create' %}" class="btn btn-sm btn-success">+ Add</a>
+                </div>
+                <div class="card-body" id="recent-trees-container">
+                    {% for tree in recent_trees %}
+                    <div class="recent-item border rounded p-2 mb-2">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ tree.tree_id }}</h6>
+                                <p class="mb-1 small">{{ tree.variety }} - Age {{ tree.age }}</p>
+                                <span class="badge bg-success">{{ tree.location.name }}</span>
+                            </div>
+                            <div class="btn-group-vertical btn-group-sm" role="group">
+                                <a href="{% url 'tree_update' tree.pk %}" class="btn btn-outline-primary btn-sm" title="Edit">
+                                    ✏️
+                                </a>
+                                <a href="{% url 'tree_delete' tree.pk %}" class="btn btn-outline-danger btn-sm" 
+                                   onclick="return confirm('Delete tree {{ tree.tree_id }}?')" title="Delete">
+                                    🗑️
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No trees yet. <a href="{% url 'tree_create' %}">Add one?</a></p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh dashboard data
+function refreshDashboard() {
+    const refreshIcon = document.getElementById('refresh-icon');
+    refreshIcon.style.animation = 'spin 1s linear infinite';
+    
+    // Simple page reload for now
+    setTimeout(() => {
+        window.location.reload();
+    }, 500);
+}
+
+// Add CSS for spin animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
+</script>
 {% endblock %}

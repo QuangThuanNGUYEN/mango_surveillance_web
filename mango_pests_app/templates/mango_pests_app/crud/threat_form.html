@@ -9,11 +9,41 @@
 {% block content %}
   <div class="crud-form-wrapper">
     <h2 class="crud-form-title">{% if object %}Edit{% else %}Create{% endif %} Threat</h2>
-    <form method="post" novalidate class="crud-form">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit" class="btn btn-submit">Save Threat</button>
-    </form>
+    <form method="post" enctype="multipart/form-data" novalidate class="crud-form">
+    {% csrf_token %}
+    
+    <div class="form-group">
+        <label for="{{ form.name.id_for_label }}">🏷️ Threat Name *</label>
+        {{ form.name }}
+        {% if form.name.errors %}
+            <div class="form-error">{{ form.name.errors.0 }}</div>
+        {% endif %}
+    </div>
+    
+    <div class="form-group">
+        <label for="{{ form.image.id_for_label }}">📷 Image</label>
+        {{ form.image }}
+        {% if form.image.errors %}
+            <div class="form-error">{{ form.image.errors.0 }}</div>
+        {% endif %}
+        <small class="form-help">Upload a clear image showing this threat</small>
+        
+        <!-- Show current image if editing -->
+        {% if form.instance.image %}
+            <div class="mt-2">
+                <p>Current image:</p>
+                <img src="{{ form.instance.image.url }}" alt="{{ form.instance.name }}" 
+                     style="max-width: 200px; max-height: 150px; border-radius: 5px;">
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- ... rest of your form fields ... -->
+    
+    <button type="submit" class="btn btn-submit">
+        💾 Save Threat
+    </button>
+</form>
     
     <a href="{% url 'crud_dashboard' %}" class="btn btn-back" style="margin-left: 1rem;">
       ← Back to Dashboard

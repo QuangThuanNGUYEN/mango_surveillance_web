@@ -1,0 +1,226 @@
+<!-- templates/mango_pests_app/surveillance_calculator.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Surveillance Calculator{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="text-center mb-4">🧮 Surveillance Calculator</h1>
+            <p class="text-center lead text-muted">
+                Calculate the surveillance effort required for your mango property
+            </p>
+        </div>
+    </div>
+
+    <!-- Farm Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h2 class="text-primary">{{ total_trees }}</h2>
+                    <p class="text-muted">Total Mango Trees</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h2 class="text-success">{{ locations|length }}</h2>
+                    <p class="text-muted">Surveillance Locations</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h2 class="text-warning">
+                        {% if grower.stocking_rate %}{{ grower.stocking_rate }}{% else %}N/A{% endif %}
+                    </h2>
+                    <p class="text-muted">Trees per Hectare</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h2 class="text-info">
+                        {% if grower.farm_size_hectares %}{{ grower.farm_size_hectares }}{% else %}N/A{% endif %}
+                    </h2>
+                    <p class="text-muted">Farm Size (Ha)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Surveillance Results -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>⏱️ Surveillance Effort Calculation</h4>
+                </div>
+                <div class="card-body">
+                    {% if surveillance_calculation %}
+                    <div class="row text-center mb-4">
+                        <div class="col-md-4">
+                            <h2 class="text-primary">{{ surveillance_calculation.total_time_hours }}</h2>
+                            <p class="text-muted">Total Hours per Session</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h2 class="text-warning">{{ surveillance_calculation.average_time_per_tree }}</h2>
+                            <p class="text-muted">Minutes per Tree</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h2 class="text-info">{{ surveillance_calculation.monthly_effort_hours }}</h2>
+                            <p class="text-muted">Monthly Hours</p>
+                        </div>
+                    </div>
+
+                    <h5>📍 Location Breakdown</h5>
+                    {% for location_data in surveillance_calculation.location_breakdown %}
+                    <div class="alert alert-light">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><strong>{{ location_data.location.name }}</strong></h6>
+                                <small class="text-muted">{{ location_data.location.address }}</small>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <strong>{{ location_data.tree_count }}</strong><br>
+                                <small>Trees</small>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <strong>{{ location_data.estimated_minutes }}</strong><br>
+                                <small>Minutes</small>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <strong>{{ location_data.estimated_hours }}</strong><br>
+                                <small>Hours</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="alert alert-warning">
+                        ⚠️ No locations with trees found. Please add locations and trees to your property.
+                    </div>
+                    {% endfor %}
+
+                    {% if surveillance_calculation.frequency_recommendation %}
+                    <div class="alert alert-info">
+                        <h6>📅 Recommended Frequency:</h6>
+                        <strong>{{ surveillance_calculation.frequency_recommendation.description }}</strong><br>
+                        <small>{{ surveillance_calculation.frequency_recommendation.annual_sessions }} sessions per year</small>
+                    </div>
+                    {% endif %}
+
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <h5>⚠️ Setup Required</h5>
+                        <p>To calculate surveillance effort, please:</p>
+                        <ul>
+                            <li>Add locations to your property</li>
+                            <li>Add mango trees to each location</li>
+                            <li>Update your farm details (tree count, size)</li>
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Plant Parts Guide -->
+            {% if plant_parts %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h4>🌿 Plant Parts Surveillance Guide</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Different pests and diseases affect different parts of mango trees:</p>
+                    <div class="row">
+                        {% for part in plant_parts %}
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3">
+                                <h6>{{ part.name }}</h6>
+                                <p class="mb-1">{{ part.description|truncatewords:15 }}</p>
+                                <span class="badge bg-{% if part.surveillance_priority >= 4 %}danger{% elif part.surveillance_priority >= 3 %}warning{% else %}success{% endif %}">
+                                    Priority {{ part.surveillance_priority }}/5
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>⚡ Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'location_create' %}" class="btn btn-primary">
+                            🗺️ Add Location
+                        </a>
+                        <a href="{% url 'tree_create' %}" class="btn btn-success">
+                            🌳 Add Trees
+                        </a>
+                        <a href="{% url 'crud_dashboard' %}" class="btn btn-info">
+                            📊 Management Dashboard
+                        </a>
+                        <a href="{% url 'threat_list' %}" class="btn btn-outline-secondary">
+                            🔍 View Threats
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Farm Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>🏡 Farm Details</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Farm:</strong> {{ grower.farm_name|default:"Not set" }}</p>
+                    <p><strong>Region:</strong> {{ grower.region|default:"Not set" }}</p>
+                    <p><strong>Tree Count:</strong> {{ grower.mango_tree_count|default:"Not set" }}</p>
+                    <p><strong>Farm Size:</strong> 
+                        {% if grower.farm_size_hectares %}{{ grower.farm_size_hectares }} ha{% else %}Not set{% endif %}
+                    </p>
+                    <p><strong>Stocking Rate:</strong> 
+                        {% if grower.stocking_rate %}{{ grower.stocking_rate }} trees/ha{% else %}Not set{% endif %}
+                    </p>
+                    <a href="{% url 'crud_dashboard' %}" class="btn btn-sm btn-outline-primary">
+                        ✏️ Update Details
+                    </a>
+                </div>
+            </div>
+
+            <!-- High Priority Threats -->
+            {% if high_priority_threats %}
+            <div class="card">
+                <div class="card-header">
+                    <h5>⚠️ High Priority Threats</h5>
+                </div>
+                <div class="card-body">
+                    {% for threat in high_priority_threats %}
+                    <div class="border-bottom pb-2 mb-2">
+                        <h6>{{ threat.name }}</h6>
+                        <p class="small text-muted">{{ threat.description|truncatewords:10 }}</p>
+                        <span class="badge bg-danger">{{ threat.get_threat_type_display }}</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No high priority threats identified.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

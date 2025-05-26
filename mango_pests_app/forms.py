@@ -1,7 +1,10 @@
-# forms.py
+# forms.py - FIXED VERSION
 from django import forms
 from .models import MangoThreat, Location, MangoTree, SurveillanceRecord, Grower
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+import datetime
+
 
 class MangoThreatForm(forms.ModelForm):
     class Meta:
@@ -28,20 +31,11 @@ class MangoThreatForm(forms.ModelForm):
             'risk_level': forms.Select(attrs={
                 'class': 'form-control'
             }),
-            'image': forms.TextInput(attrs={
+            'image': forms.ClearableFileInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Image filename (e.g., threat.png)'
+                'accept': 'image/*'
             })
         }
-        
-    def clean_name(self):
-        name = self.cleaned_data.get('name')
-        if name:
-            # Check for duplicate names (excluding current instance if editing)
-            threat_id = self.instance.id if self.instance else None
-            if MangoThreat.objects.filter(name__iexact=name).exclude(id=threat_id).exists():
-                raise forms.ValidationError("A threat with this name already exists.")
-        return name
 
 
 class LocationForm(forms.ModelForm):
@@ -51,17 +45,17 @@ class LocationForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Location name'
+                'placeholder': 'e.g., North Block, Paddock A, Main Orchard'
             }),
             'address': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 3,
-                'placeholder': 'Full address'
+                'placeholder': 'Full address or location description'
             }),
             'description': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 4,
-                'placeholder': 'Description of the location'
+                'placeholder': 'Additional details about this location (optional)'
             })
         }
 
@@ -88,11 +82,28 @@ class MangoTreeForm(forms.ModelForm):
                 'placeholder': 'Mango variety'
             })
         }
+    
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        
+        if user:
+            try:
+                grower = Grower.objects.get(user=user)
+                self.fields['location'].queryset = Location.objects.filter(grower=grower)
+            except Grower.DoesNotExist:
+                self.fields['location'].queryset = Location.objects.none()
+        else:
+            self.fields['location'].queryset = Location.objects.none()
+        
+        if self.fields['location'].queryset.count() == 0:
+            self.fields['location'].empty_label = "No locations available - create a location first"
+        else:
+            self.fields['location'].empty_label = "Select a location"
         
     def clean_tree_id(self):
         tree_id = self.cleaned_data.get('tree_id')
         if tree_id:
-            # Check for duplicate tree IDs (excluding current instance if editing)
             tree_pk = self.instance.pk if self.instance else None
             if MangoTree.objects.filter(tree_id=tree_id).exclude(pk=tree_pk).exists():
                 raise forms.ValidationError("A tree with this ID already exists.")
@@ -151,6 +162,7 @@ class ThreatSearchForm(forms.Form):
         })
     )
     
+
 class UserRegistrationForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)
     contact_number = forms.CharField(max_length=15, required=False)
@@ -170,8 +182,6 @@ class UserRegistrationForm(forms.ModelForm):
             )
         return user
     
-
-# Django modelform to auto-generate form fields
 
 class GrowerForm(forms.ModelForm):
     class Meta:

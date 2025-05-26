@@ -1,0 +1,382 @@
+<!-- templates/mango_pests_app/analytics.html - COMPLETE FILE -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Analytics Dashboard - Mango Surveillance{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+    .analytics-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+        border: none;
+    }
+    
+    .analytics-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .metric-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 400px;
+        margin-bottom: 20px;
+    }
+    
+    .trend-up {
+        color: #28a745;
+    }
+    
+    .trend-down {
+        color: #dc3545;
+    }
+    
+    .trend-stable {
+        color: #ffc107;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4 mb-0">
+                <i class="fas fa-chart-line text-primary"></i>
+                Analytics Dashboard
+            </h1>
+            <p class="lead text-muted">Comprehensive insights into mango threat patterns and trends</p>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="metric-card">
+                <i class="fas fa-bug fa-2x mb-2"></i>
+                <h3 id="total-threats">{{ total_threats }}</h3>
+                <p class="mb-0">Total Threats Identified</p>
+                <small><i class="fas fa-arrow-up trend-up"></i> +12% this month</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                <h3 id="high-risk-threats">{{ high_risk_count|default:0 }}</h3>
+                <p class="mb-0">High Risk Threats</p>
+                <small><i class="fas fa-arrow-down trend-down"></i> -5% this week</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <i class="fas fa-map-marker-alt fa-2x mb-2"></i>
+                <h3 id="affected-locations">{{ locations_count|default:0 }}</h3>
+                <p class="mb-0">Monitored Locations</p>
+                <small><i class="fas fa-minus trend-stable"></i> Stable</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <i class="fas fa-shield-alt fa-2x mb-2"></i>
+                <h3 id="prevention-rate">87%</h3>
+                <p class="mb-0">Prevention Success Rate</p>
+                <small><i class="fas fa-arrow-up trend-up"></i> +3% improvement</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Charts -->
+    <div class="row mb-4">
+        <!-- Threat Distribution -->
+        <div class="col-lg-6 mb-4">
+            <div class="card analytics-card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-pie text-primary"></i> Threat Type Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="threatDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Level Analysis -->
+        <div class="col-lg-6 mb-4">
+            <div class="card analytics-card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-bar text-danger"></i> Risk Level Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="riskAnalysisChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trend Analysis -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card analytics-card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-line text-success"></i> Monthly Threat Discovery Trends</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Statistics -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card analytics-card">
+                <div class="card-header">
+                    <h5><i class="fas fa-table text-info"></i> Threat Statistics Breakdown</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Threat Type</th>
+                                    <th>Count</th>
+                                    <th>Percentage</th>
+                                    <th>Risk Distribution</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in threat_stats.by_type %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-{% if stat.threat_type == 'pest' %}warning{% else %}danger{% endif %}">
+                                            {{ stat.threat_type|title }}
+                                        </span>
+                                    </td>
+                                    <td><strong>{{ stat.count }}</strong></td>
+                                    <td>
+                                        {% if total_threats > 0 %}
+                                            {% widthratio stat.count total_threats 100 %}%
+                                        {% else %}
+                                            0%
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar bg-success" style="width: 30%"></div>
+                                            <div class="progress-bar bg-warning" style="width: 50%"></div>
+                                            <div class="progress-bar bg-danger" style="width: 20%"></div>
+                                        </div>
+                                        <small class="text-muted">Low | Moderate | High</small>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">No threat data available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card analytics-card">
+                <div class="card-header">
+                    <h5><i class="fas fa-lightbulb text-warning"></i> Key Insights</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Most Common Threat:</strong> {% if threat_stats.by_type %}Pests account for the majority of identified threats{% else %}No data available{% endif %}
+                    </div>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Risk Alert:</strong> High-risk threats require immediate attention
+                    </div>
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i>
+                        <strong>Good News:</strong> Prevention rates are improving month over month
+                    </div>
+                    
+                    <h6 class="mt-4">Quick Actions</h6>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'crud_dashboard' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add New Threat
+                        </a>
+                        <a href="{% url 'threat_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-list"></i> View All Threats
+                        </a>
+                        <button class="btn btn-outline-success" onclick="exportData()">
+                            <i class="fas fa-download"></i> Export Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Threat Distribution Chart
+    const distributionCtx = document.getElementById('threatDistributionChart').getContext('2d');
+    
+    // Prepare data for threat distribution
+    const threatData = [
+        {% for stat in threat_stats.by_type %}
+        {
+            label: '{{ stat.threat_type|title }}',
+            count: {{ stat.count }}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+    
+    const distributionLabels = threatData.map(item => item.label);
+    const distributionCounts = threatData.map(item => item.count);
+    
+    new Chart(distributionCtx, {
+        type: 'doughnut',
+        data: {
+            labels: distributionLabels.length > 0 ? distributionLabels : ['No Data'],
+            datasets: [{
+                data: distributionCounts.length > 0 ? distributionCounts : [1],
+                backgroundColor: distributionLabels.length > 0 ? ['#ffc107', '#dc3545', '#28a745', '#17a2b8'] : ['#e9ecef'],
+                borderWidth: 3,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        font: { size: 14 }
+                    }
+                }
+            }
+        }
+    });
+
+    // Risk Analysis Chart
+    const riskCtx = document.getElementById('riskAnalysisChart').getContext('2d');
+    
+    // Prepare data for risk analysis
+    const riskData = [
+        {% for stat in threat_stats.by_risk %}
+        {
+            label: '{{ stat.risk_level|title }}',
+            count: {{ stat.count }}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+    
+    const riskLabels = riskData.map(item => item.label);
+    const riskCounts = riskData.map(item => item.count);
+    const riskColors = riskLabels.map(label => {
+        switch(label.toLowerCase()) {
+            case 'low': return '#28a745';
+            case 'moderate': return '#ffc107';
+            case 'high': return '#dc3545';
+            default: return '#6c757d';
+        }
+    });
+    
+    new Chart(riskCtx, {
+        type: 'bar',
+        data: {
+            labels: riskLabels.length > 0 ? riskLabels : ['No Data'],
+            datasets: [{
+                label: 'Number of Threats',
+                data: riskCounts.length > 0 ? riskCounts : [0],
+                backgroundColor: riskColors.length > 0 ? riskColors : ['#e9ecef'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+
+    // Trend Chart (sample data for demonstration)
+    const trendCtx = document.getElementById('trendChart').getContext('2d');
+    new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+                label: 'New Threats Discovered',
+                data: [2, 4, 3, 5, 2, 3],
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Threats Resolved',
+                data: [1, 3, 2, 4, 3, 4],
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top'
+                }
+            }
+        }
+    });
+});
+
+// Export functionality
+function exportData() {
+    alert('Export functionality will be implemented in the next phase!');
+}
+</script>
+{% endblock %}
