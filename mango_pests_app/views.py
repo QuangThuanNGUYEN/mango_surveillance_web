@@ -195,7 +195,7 @@ class LocationCreateView(LoginRequiredMixin, CreateView):
     model = Location
     form_class = LocationForm
     template_name = 'mango_pests_app/crud/location_form.html'
-    success_url = reverse_lazy('location_list')
+    success_url = reverse_lazy('crud_dashboard')
     
     def form_valid(self, form):
         messages.success(self.request, f'Location "{form.instance.name}" has been created!')
@@ -206,7 +206,7 @@ class LocationUpdateView(LoginRequiredMixin, UpdateView):
     model = Location
     form_class = LocationForm
     template_name = 'mango_pests_app/crud/location_form.html'
-    success_url = reverse_lazy('location_list')
+    success_url = reverse_lazy('crud_dashboard')
     
     def form_valid(self, form):
         messages.success(self.request, f'Location "{form.instance.name}" has been updated!')
@@ -216,7 +216,7 @@ class LocationUpdateView(LoginRequiredMixin, UpdateView):
 class LocationDeleteView(LoginRequiredMixin, DeleteView):
     model = Location
     template_name = 'mango_pests_app/crud/location_confirm_delete.html'
-    success_url = reverse_lazy('location_list')
+    success_url = reverse_lazy('crud_dashboard')
     
     def delete(self, request, *args, **kwargs):
         location = self.get_object()
@@ -229,7 +229,7 @@ class MangoTreeCreateView(LoginRequiredMixin, CreateView):
     model = MangoTree
     form_class = MangoTreeForm
     template_name = 'mango_pests_app/crud/tree_form.html'
-    success_url = reverse_lazy('tree_list')
+    success_url = reverse_lazy('crud_dashboard')
     
     def form_valid(self, form):
         messages.success(self.request, f'Tree "{form.instance.tree_id}" has been created!')

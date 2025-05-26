@@ -12,7 +12,7 @@
     <form method="post" class="crud-form">
       {% csrf_token %}
       <button type="submit" class="btn btn-submit btn-danger">Yes, delete</button>
-      <a href="{% url 'threat_list' %}" class="btn btn-back">Cancel</a>
+      <a href="{% url 'crud_dashboard' %}" class="btn btn-back">Cancel</a>
     </form>
   </div>
 {% endblock %}
