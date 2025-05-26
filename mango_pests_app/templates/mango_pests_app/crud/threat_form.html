@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>{% if object %}Edit{% else %}Create{% endif %} Threat</h2>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Save Threat</button>
+  </form>
+  <a href="{% url 'threat_list' %}">Back to Threat List</a>
+{% endblock %}

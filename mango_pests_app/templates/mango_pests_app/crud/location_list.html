@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>Locations</h2>
+  <a href="{% url 'location_create' %}">Add New Location</a>
+  <ul>
+    {% for location in object_list %}
+      <li>
+        {{ location.name }} - {{ location.description }}
+        <a href="{% url 'location_update' location.pk %}">Edit</a> |
+        <a href="{% url 'location_delete' location.pk %}">Delete</a>
+      </li>
+    {% empty %}
+      <li>No locations available.</li>
+    {% endfor %}
+  </ul>
+  <a href="{% url 'crud_dashboard' %}">Back to Dashboard</a>
+{% endblock %}

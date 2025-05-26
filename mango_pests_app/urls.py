@@ -1,15 +1,14 @@
-# urls.py
-from django.urls import re_path, path
+from django.urls import path
 from . import views
 from .views import (
     HomeView, ThreatListView, ThreatDetailView, AboutView, 
-    CompareThreatsView, CrudDashboardView, CrudView, 
+    CompareThreatsView, CrudDashboardView, CrudRedirectView,  # Renamed
     # Threat CRUD
     ThreatCreateView, ThreatUpdateView, ThreatDeleteView,
     # Location CRUD  
     LocationListView, LocationCreateView, LocationUpdateView, LocationDeleteView,
     # Tree CRUD
-    MangoTreeListView, MangoTreeCreateView,
+    MangoTreeListView, MangoTreeCreateView, MangoTreeUpdateView, MangoTreeDeleteView,  # Added update/delete
     # API
     ThreatAPIView
 )
@@ -27,7 +26,7 @@ urlpatterns = [
     
     # CRUD Dashboard
     path('crud/', CrudDashboardView.as_view(), name='crud_dashboard'),
-    path('crud/legacy/', CrudView.as_view(), name='crud'),  # Legacy redirect
+    path('crud/legacy/', CrudRedirectView.as_view(), name='crud'),  # Renamed
     
     # Threat Management
     path('threats/create/', ThreatCreateView.as_view(), name='threat_create'),
@@ -43,6 +42,8 @@ urlpatterns = [
     # Tree Management
     path('trees/', MangoTreeListView.as_view(), name='tree_list'),
     path('trees/create/', MangoTreeCreateView.as_view(), name='tree_create'),
+    path('trees/<int:pk>/edit/', MangoTreeUpdateView.as_view(), name='tree_update'),  # Added
+    path('trees/<int:pk>/delete/', MangoTreeDeleteView.as_view(), name='tree_delete'),  # Added
     
     # API endpoints
     path('api/threats/', ThreatAPIView.as_view(), name='api_threats'),

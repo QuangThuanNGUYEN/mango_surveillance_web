@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-3">All Mango Trees</h2>
+  
+  
+
+  <a href="{% url 'tree_create' %}" class="btn btn-success mb-3">Add New Tree</a>
+  
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Variety</th>
+        <th>Location</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for tree in object_list %}
+      <tr>
+        <td>{{ tree.id }}</td>
+        <td>{{ tree.variety }}</td>
+        <td>{{ tree.location.name }}</td>
+        <td>
+          <a href="{% url 'tree_update' pk=tree.pk %}" class="btn btn-sm btn-warning">Edit</a>
+          <a href="{% url 'tree_delete' pk=tree.pk %}" class="btn btn-sm btn-danger">Delete</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <a href="{% url 'crud_dashboard' %}" class="btn btn-primary mb-3">
+    ← Back to Dashboard
+  </a>
+
+</div>
+{% endblock %}

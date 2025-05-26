@@ -169,3 +169,35 @@ class UserRegistrationForm(forms.ModelForm):
                 contact_number=self.cleaned_data.get('contact_number')
             )
         return user
+    
+
+# Django modelform to auto-generate form fields
+
+class GrowerForm(forms.ModelForm):
+    class Meta:
+        model = Grower
+        fields = ['contact_number', 'farm_name', 'region', 'mango_tree_count', 'notes']
+        widgets = {
+            'contact_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Phone number'
+            }),
+            'farm_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Farm name'
+            }),
+            'region': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Region name'
+            }),
+            'mango_tree_count': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Number of mango trees',
+                'min': 0
+            }),
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Optional notes'
+            })
+        }

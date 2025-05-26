@@ -33,7 +33,7 @@
                     About Us
                 </a>
                 {% if user.is_authenticated %}
-                    <a href="{% url 'crud' %}">My Farm</a>
+                    <a href="{% url 'crud_dashboard' %}">My Farm</a>
                     <a href="{% url 'logout' %}">Logout</a>
                 {% else %}
                     <a href="{% url 'login' %}">Login</a>
@@ -46,6 +46,20 @@
             <h4>{{ page_title }}</h4>
         {% endblock %}
     </header>
+
+    {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+
+
     <main>
         {% block content %}
         {% endblock %}
@@ -58,7 +72,7 @@
                 <a href="{% url 'home' %}">Home</a> |
                 <a href="{% url 'threat_list' %}">Threats</a> |
                 <a href="{% url 'about' %}">About Us</a> |
-                <a href="{% url 'crud' %}"> Crud</a>
+                <a href="{% url 'crud_dashboard' %}"> Crud</a>
             </div>
         </div>
     </footer>

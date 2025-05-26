@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h1>CRUD Dashboard</h1>
+
+  <!-- THREATS -->
+  <h2>Threats</h2>
+  <a href="{% url 'threat_create' %}" class="btn btn-success">Add New Threat</a>
+  <table class="table">
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Actions</th>
+    </tr>
+    {% for threat in recent_threats %}
+    <tr>
+      <td>{{ threat.name }}</td>
+      <td>{{ threat.threat_type }}</td>
+      <td>
+        <a href="{% url 'threat_update' threat.slug %}">Edit</a> |
+        <a href="{% url 'threat_delete' threat.slug %}">Delete</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <!-- LOCATIONS -->
+  <h2>Locations</h2>
+  <a href="{% url 'location_create' %}" class="btn btn-success">Add New Location</a>
+  <table class="table">
+    <tr>
+      <th>Name</th>
+      <th>Actions</th>
+    </tr>
+    {% for loc in recent_locations %}
+    <tr>
+      <td>{{ loc.name }}</td>
+      <td>
+        <a href="{% url 'location_update' loc.pk %}">Edit</a> |
+        <a href="{% url 'location_delete' loc.pk %}">Delete</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <!-- TREES -->
+    <h2>Mango Trees</h2>
+    <a href="{% url 'tree_create' %}" class="btn btn-success mb-2">Add New Tree</a>
+    <table class="table table-striped">
+    <thead>
+        <tr>
+        <th>ID</th>
+        <th>Location</th>
+        <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for tree in recent_trees %}
+        <tr>
+        <td>{{ tree.id }}</td>
+        <td>{{ tree.location.name }}</td>
+        <td>
+            <!-- You'll need to add views and URL patterns for these -->
+            <a href="{% url 'tree_update' tree.id %}" class="btn btn-sm btn-warning">Edit</a>
+            <a href="{% url 'tree_delete' tree.id %}" class="btn btn-sm btn-danger">Delete</a>
+        </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3">No trees found.</td></tr>
+        {% endfor %}
+    </tbody>
+    </table>
+
+
+  <!-- STATS (Optional) -->
+  <h2>Statistics</h2>
+  <ul>
+    <li>Total Threats: {{ stats.total_threats }}</li>
+    <li>Total Pests: {{ stats.total_pests }}</li>
+    <li>Total Diseases: {{ stats.total_diseases }}</li>
+    <li>Total Locations: {{ stats.total_locations }}</li>
+    <li>Total Trees: {{ stats.total_trees }}</li>
+  </ul>
+</div>
+{% endblock %}

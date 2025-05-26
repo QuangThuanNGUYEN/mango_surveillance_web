@@ -11,13 +11,12 @@ from django.http import JsonResponse
 from django.db.models import Q
 from django.core.paginator import Paginator
 from django.contrib.auth import logout, login, authenticate
-
+from django.shortcuts import render, redirect
 from .models import MangoThreat, Location, MangoTree, SurveillanceRecord, Grower
 from .forms import (
-    MangoThreatForm, LocationForm, MangoTreeForm, 
-    SurveillanceRecordForm, ThreatSearchForm, UserRegistrationForm
+    MangoThreatForm, LocationForm, MangoTreeForm, UserRegistrationForm
 )
-
+from .models import MangoThreat, Location, MangoTree, Grower
 from django.db.models import Q  
 from .data import mango_threats  
 
@@ -39,74 +38,6 @@ class HomeView(TemplateView):
         context['disease_count'] = MangoThreat.objects.filter(threat_type='disease').count()
         
         return context
-
-
-# Threat List Page with improved filtering and search
-# class ThreatListView(ListView):
-#     """
-#     Enhanced ListView for displaying mango threats with search, filtering, and sorting.
-#     """
-#     model = MangoThreat
-#     template_name = 'mango_pests_app/threat_list.html'
-#     context_object_name = 'threats'
-#     paginate_by = 10
-
-#     def get_queryset(self):
-#         queryset = MangoThreat.objects.all()
-        
-#         # Search functionality
-#         query = self.request.GET.get('q', '').strip()
-#         if query:
-#             queryset = queryset.filter(
-#                 Q(name__icontains=query) | 
-#                 Q(description__icontains=query) |
-#                 Q(details__icontains=query)
-#             )
-        
-#         # Category filtering
-#         category = self.request.GET.get('category', '').strip()
-#         if category in ['pest', 'disease']:
-#             queryset = queryset.filter(threat_type=category)
-        
-#         # Sorting
-#         sort_option = self.request.GET.get('sort', 'name_asc')
-#         if sort_option == 'name_desc':
-#             queryset = queryset.order_by('-name')
-#         elif sort_option == 'created_desc':
-#             queryset = queryset.order_by('-created_at')
-#         elif sort_option == 'created_asc':
-#             queryset = queryset.order_by('created_at')
-#         else:  # name_asc
-#             queryset = queryset.order_by('name')
-            
-#         return queryset
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-        
-#         # Preserve query parameters for pagination
-#         query = self.request.GET.get('q', '')
-#         category = self.request.GET.get('category', '')
-#         sort_option = self.request.GET.get('sort', 'name_asc')
-        
-#         context.update({
-#             'query': query,
-#             'threat_type': category,
-#             'sort_option': sort_option,
-#             'search_form': ThreatSearchForm(initial={
-#                 'query': query,
-#                 'category': category,
-#                 'sort': sort_option
-#             })
-#         })
-        
-#         # Count threats by type for current queryset
-#         threats = self.get_queryset()
-#         context['pest_count'] = threats.filter(threat_type='pest').count()
-#         context['disease_count'] = threats.filter(threat_type='disease').count()
-#         context['total_results'] = threats.count()
-        
-#         return context
 
 
 class ThreatListView(TemplateView):
@@ -213,14 +144,14 @@ class ThreatCreateView(LoginRequiredMixin, CreateView):
     """
     model = MangoThreat
     form_class = MangoThreatForm
-    template_name = 'mango_pests_app/threat_form.html'
+    template_name = 'mango_pests_app/crud/threat_form.html'
     
     def form_valid(self, form):
         messages.success(self.request, f'Threat "{form.instance.name}" has been created successfully!')
         return super().form_valid(form)
     
     def get_success_url(self):
-        return reverse('threat_details', kwargs={'threat_name': self.object.slug})
+        return reverse('crud_dashboard')
 
 
 class ThreatUpdateView(LoginRequiredMixin, UpdateView):
@@ -229,7 +160,7 @@ class ThreatUpdateView(LoginRequiredMixin, UpdateView):
     """
     model = MangoThreat
     form_class = MangoThreatForm
-    template_name = 'mango_pests_app/threat_form.html'
+    template_name = 'mango_pests_app/crud/threat_form.html'
     slug_field = 'slug'
     slug_url_kwarg = 'threat_name'
     
@@ -238,7 +169,7 @@ class ThreatUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
     
     def get_success_url(self):
-        return reverse('threat_details', kwargs={'threat_name': self.object.slug})
+        return reverse('crud_dashboard')
 
 
 class ThreatDeleteView(LoginRequiredMixin, DeleteView):
@@ -246,10 +177,10 @@ class ThreatDeleteView(LoginRequiredMixin, DeleteView):
     Delete a mango threat.
     """
     model = MangoThreat
-    template_name = 'mango_pests_app/threat_confirm_delete.html'
+    template_name = 'mango_pests_app/crud/threat_confirm_delete.html'
     slug_field = 'slug'
     slug_url_kwarg = 'threat_name'
-    success_url = reverse_lazy('threat_list')
+    success_url = reverse_lazy('crud_dashboard')
     
     def delete(self, request, *args, **kwargs):
         threat = self.get_object()
@@ -257,37 +188,11 @@ class ThreatDeleteView(LoginRequiredMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-# CRUD Dashboard View
-class CrudDashboardView(LoginRequiredMixin, TemplateView):
-    """
-    Main CRUD dashboard for managing all entities.
-    """
-    template_name = 'mango_pests_app/crud_dashboard.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        
-        # Get recent items for dashboard
-        context['recent_threats'] = MangoThreat.objects.order_by('-created_at')[:5]
-        context['recent_locations'] = Location.objects.all()[:5]
-        context['recent_trees'] = MangoTree.objects.order_by('-id')[:5]
-        
-        # Statistics
-        context['stats'] = {
-            'total_threats': MangoThreat.objects.count(),
-            'total_pests': MangoThreat.objects.filter(threat_type='pest').count(),
-            'total_diseases': MangoThreat.objects.filter(threat_type='disease').count(),
-            'total_locations': Location.objects.count(),
-            'total_trees': MangoTree.objects.count(),
-        }
-        
-        return context
-
 
 # Location CRUD Views
 class LocationListView(LoginRequiredMixin, ListView):
     model = Location
-    template_name = 'mango_pests_app/location_list.html'
+    template_name = 'mango_pests_app/crud/location_list.html'
     context_object_name = 'locations'
     paginate_by = 10
 
@@ -295,7 +200,7 @@ class LocationListView(LoginRequiredMixin, ListView):
 class LocationCreateView(LoginRequiredMixin, CreateView):
     model = Location
     form_class = LocationForm
-    template_name = 'mango_pests_app/location_form.html'
+    template_name = 'mango_pests_app/crud/location_form.html'
     success_url = reverse_lazy('location_list')
     
     def form_valid(self, form):
@@ -306,7 +211,7 @@ class LocationCreateView(LoginRequiredMixin, CreateView):
 class LocationUpdateView(LoginRequiredMixin, UpdateView):
     model = Location
     form_class = LocationForm
-    template_name = 'mango_pests_app/location_form.html'
+    template_name = 'mango_pests_app/crud/location_form.html'
     success_url = reverse_lazy('location_list')
     
     def form_valid(self, form):
@@ -316,14 +221,18 @@ class LocationUpdateView(LoginRequiredMixin, UpdateView):
 
 class LocationDeleteView(LoginRequiredMixin, DeleteView):
     model = Location
-    template_name = 'mango_pests_app/location_confirm_delete.html'
+    template_name = 'mango_pests_app/crud/location_confirm_delete.html'
     success_url = reverse_lazy('location_list')
-
+    
+    def delete(self, request, *args, **kwargs):
+        location = self.get_object()
+        messages.success(request, f'Location "{location.name}" has been deleted successfully!')
+        return super().delete(request, *args, **kwargs)
 
 # MangoTree CRUD Views
 class MangoTreeListView(LoginRequiredMixin, ListView):
     model = MangoTree
-    template_name = 'mango_pests_app/tree_list.html'
+    template_name = 'mango_pests_app/crud/tree_list.html'
     context_object_name = 'trees'
     paginate_by = 15
 
@@ -331,13 +240,52 @@ class MangoTreeListView(LoginRequiredMixin, ListView):
 class MangoTreeCreateView(LoginRequiredMixin, CreateView):
     model = MangoTree
     form_class = MangoTreeForm
-    template_name = 'mango_pests_app/tree_form.html'
+    template_name = 'mango_pests_app/crud/tree_form.html'
     success_url = reverse_lazy('tree_list')
     
     def form_valid(self, form):
         messages.success(self.request, f'Tree "{form.instance.tree_id}" has been created!')
         return super().form_valid(form)
+    
+class MangoTreeUpdateView(LoginRequiredMixin, UpdateView):
+    model = MangoTree
+    form_class = MangoTreeForm
+    template_name = 'mango_pests_app/crud/tree_form.html'
+    success_url = reverse_lazy('crud_dashboard')
+    
+    def form_valid(self, form):
+        messages.success(self.request, f'Tree "{form.instance.tree_id}" has been updated!')
+        return super().form_valid(form)
 
+
+class MangoTreeDeleteView(LoginRequiredMixin, DeleteView):
+    model = MangoTree
+    template_name = 'mango_pests_app/crud/tree_confirm_delete.html'
+    success_url = reverse_lazy('crud_dashboard')
+    
+    def delete(self, request, *args, **kwargs):
+        tree = self.get_object()
+        messages.success(request, f'Tree "{tree.tree_id}" has been deleted successfully!')
+        return super().delete(request, *args, **kwargs)
+    
+# --- CRUD Dashboard ---
+class CrudDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'mango_pests_app/crud/crud_dashboard.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['recent_threats'] = MangoThreat.objects.order_by('-created_at')[:5]
+        context['recent_locations'] = Location.objects.all()[:5]
+        context['recent_trees'] = MangoTree.objects.order_by('-id')[:5]
+        
+        context['stats'] = {
+            'total_threats': MangoThreat.objects.count(),
+            'total_pests': MangoThreat.objects.filter(threat_type='pest').count(),
+            'total_diseases': MangoThreat.objects.filter(threat_type='disease').count(),
+            'total_locations': Location.objects.count(),
+            'total_trees': MangoTree.objects.count(),
+        }
+        return context
 
 # About Page (unchanged)
 class AboutView(TemplateView):
@@ -395,7 +343,8 @@ def login_view(request):
         
         if user is not None:
             login(request, user)
-            return redirect('home') 
+            messages.success(request, f'Welcome back, {user.username}!')
+            return redirect('home')
         else:
             messages.error(request, 'Invalid username or password.')
 
@@ -407,7 +356,8 @@ def register_view(request):
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('login')  
+            messages.success(request, 'Account created successfully! Please log in.')
+            return redirect('login')
     else:
         form = UserRegistrationForm()
     return render(request, 'mango_pests_app/register.html', {'form': form})
@@ -417,7 +367,7 @@ def logout_view(request):
     logout(request)
     return redirect('home') 
 
-class CrudView(LoginRequiredMixin, TemplateView):
+class CrudRedirectView(LoginRequiredMixin, TemplateView):
     template_name = 'mango_pests_app/crud.html'
 
     def get_context_data(self, **kwargs):
