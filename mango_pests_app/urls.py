@@ -2,13 +2,13 @@ from django.urls import path
 from . import views
 from .views import (
     HomeView, ThreatListView, ThreatDetailView, AboutView, 
-    CompareThreatsView, CrudDashboardView, CrudRedirectView,  # Renamed
+    CompareThreatsView, CrudDashboardView, CrudRedirectView, 
     # Threat CRUD
     ThreatCreateView, ThreatUpdateView, ThreatDeleteView,
     # Location CRUD  
-    LocationListView, LocationCreateView, LocationUpdateView, LocationDeleteView,
+    LocationCreateView, LocationUpdateView, LocationDeleteView,
     # Tree CRUD
-    MangoTreeListView, MangoTreeCreateView, MangoTreeUpdateView, MangoTreeDeleteView,  # Added update/delete
+    MangoTreeCreateView, MangoTreeUpdateView, MangoTreeDeleteView,  # Added update/delete
     # API
     ThreatAPIView
 )
@@ -26,7 +26,7 @@ urlpatterns = [
     
     # CRUD Dashboard
     path('crud/', CrudDashboardView.as_view(), name='crud_dashboard'),
-    path('crud/legacy/', CrudRedirectView.as_view(), name='crud'),  # Renamed
+    path('crud/legacy/', CrudRedirectView.as_view(), name='crud'),
     
     # Threat Management
     path('threats/create/', ThreatCreateView.as_view(), name='threat_create'),
@@ -34,13 +34,11 @@ urlpatterns = [
     path('threats/<slug:threat_name>/delete/', ThreatDeleteView.as_view(), name='threat_delete'),
     
     # Location Management
-    path('locations/', LocationListView.as_view(), name='location_list'),
     path('locations/create/', LocationCreateView.as_view(), name='location_create'),
     path('locations/<int:pk>/edit/', LocationUpdateView.as_view(), name='location_update'),
     path('locations/<int:pk>/delete/', LocationDeleteView.as_view(), name='location_delete'),
     
     # Tree Management
-    path('trees/', MangoTreeListView.as_view(), name='tree_list'),
     path('trees/create/', MangoTreeCreateView.as_view(), name='tree_create'),
     path('trees/<int:pk>/edit/', MangoTreeUpdateView.as_view(), name='tree_update'),  # Added
     path('trees/<int:pk>/delete/', MangoTreeDeleteView.as_view(), name='tree_delete'),  # Added

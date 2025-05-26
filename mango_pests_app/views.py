@@ -190,12 +190,6 @@ class ThreatDeleteView(LoginRequiredMixin, DeleteView):
 
 
 # Location CRUD Views
-class LocationListView(LoginRequiredMixin, ListView):
-    model = Location
-    template_name = 'mango_pests_app/crud/location_list.html'
-    context_object_name = 'locations'
-    paginate_by = 10
-
 
 class LocationCreateView(LoginRequiredMixin, CreateView):
     model = Location
@@ -230,12 +224,6 @@ class LocationDeleteView(LoginRequiredMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
 # MangoTree CRUD Views
-class MangoTreeListView(LoginRequiredMixin, ListView):
-    model = MangoTree
-    template_name = 'mango_pests_app/crud/tree_list.html'
-    context_object_name = 'trees'
-    paginate_by = 15
-
 
 class MangoTreeCreateView(LoginRequiredMixin, CreateView):
     model = MangoTree
