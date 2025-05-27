@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Surveillance History{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-history"></i> Surveillance History</h2>
+            <p class="text-muted">View and analyze your historical surveillance data</p>
+        </div>
+    </div>
+    
+    <!-- Statistics Summary -->
+    {% if not statistics.no_data %}
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-primary">{{ statistics.total_records }}</h3>
+                    <p class="mb-0">Total Sessions</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-success">{{ statistics.tree_stats.total_surveyed }}</h3>
+                    <p class="mb-0">Trees Surveyed</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-info">{{ statistics.time_stats.total_hours }}</h3>
+                    <p class="mb-0">Total Hours</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-warning">{{ statistics.threat_stats.detection_rate }}%</h3>
+                    <p class="mb-0">Threat Detection Rate</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Search and Filter -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5><i class="fas fa-search"></i> Filter Records</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="date_from" class="form-label">From Date</label>
+                    <input type="date" class="form-control" id="date_from" name="date_from" 
+                           value="{{ current_filters.date_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="date_to" class="form-label">To Date</label>
+                    <input type="date" class="form-control" id="date_to" name="date_to" 
+                           value="{{ current_filters.date_to }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="location" class="form-label">Location</label>
+                    <select class="form-select" id="location" name="location">
+                        <option value="">All locations</option>
+                        {% for location in locations %}
+                            <option value="{{ location.id }}" 
+                                    {% if current_filters.location == location.id|stringformat:"s" %}selected{% endif %}>
+                                {{ location.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Records List -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-list"></i> Surveillance Records</h5>
+            <a href="{% url 'surveillance_record_create' %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> New Session
+            </a>
+        </div>
+        <div class="card-body">
+            {% if records %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Location</th>
+                                <th>Duration</th>
+                                <th>Trees</th>
+                                <th>Threats Found</th>
+                                <th>Weather</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in records %}
+                            <tr>
+                                <td>
+                                    <strong>{{ record.date|date:"M d, Y" }}</strong><br>
+                                    {% if record.start_time %}
+                                        <small class="text-muted">{{ record.start_time }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ record.location.name }}</strong><br>
+                                    <small class="text-muted">{{ record.location.address|truncatewords:4 }}</small>
+                                </td>
+                                <td>
+                                    {% if record.total_time_minutes %}
+                                        {{ record.total_time_minutes }} min
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-info">{{ record.trees_surveyed_count }}</span>
+                                </td>
+                                <td class="text-center">
+                                    {% if record.tree_inspections.all %}
+                                        {% with threats_count=record.tree_inspections.all|length %}
+                                            {% if threats_count > 0 %}
+                                                <span class="badge bg-warning">{{ threats_count }}</span>
+                                            {% else %}
+                                                <span class="badge bg-success">0</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% else %}
+                                        <span class="badge bg-success">0</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if record.weather_conditions %}
+                                        {{ record.weather_conditions|title }}
+                                        {% if record.temperature_celsius %}
+                                            <br><small>{{ record.temperature_celsius }}°C</small>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if record.completed %}success{% else %}warning{% endif %}">
+                                        {% if record.completed %}Completed{% else %}In Progress{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'surveillance_record_detail' record.pk %}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                            </li>
+                        {% endif %}
+                        
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+                        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                    <h4>No surveillance records found</h4>
+                    <p class="text-muted">Start recording your surveillance sessions to see them here.</p>
+                    <a href="{% url 'surveillance_record_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Record Your First Session
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+</div>
+{% endblock %}

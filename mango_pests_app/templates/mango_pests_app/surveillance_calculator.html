@@ -1,226 +1,571 @@
-<!-- templates/mango_pests_app/surveillance_calculator.html -->
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Surveillance Calculator{% endblock %}
+{% block title %}Mango Surveillance Calculator{% endblock %}
+
+{% block extra_css %}
+<style>
+    .summary-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        transition: transform 0.2s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .location-card {
+        background: #f8f9fa;
+        border-left: 4px solid #28a745;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .data-collection-section {
+        background: #e3f2fd;
+        border: 2px solid #2196f3;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+    }
+    
+    .plant-part-selector {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 10px;
+        margin: 5px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .plant-part-selector:hover {
+        background: #f0f8ff;
+        border-color: #2196f3;
+    }
+    
+    .plant-part-selector.selected {
+        background: #2196f3;
+        color: white;
+        border-color: #1976d2;
+    }
+    
+    .surveillance-form {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .time-tracker {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .pest-disease-checkbox {
+        margin: 5px 0;
+        padding: 8px 12px;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+    }
+    
+    .pest-disease-checkbox.selected {
+        background: #fff3cd;
+        border-color: #ffc107;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container py-4">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="text-center mb-4">🧮 Surveillance Calculator</h1>
-            <p class="text-center lead text-muted">
-                Calculate the surveillance effort required for your mango property
-            </p>
-        </div>
-    </div>
-
-    <!-- Farm Overview Cards -->
+    
+    <!-- Header -->
     <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h2 class="text-primary">{{ total_trees }}</h2>
-                    <p class="text-muted">Total Mango Trees</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h2 class="text-success">{{ locations|length }}</h2>
-                    <p class="text-muted">Surveillance Locations</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h2 class="text-warning">
-                        {% if grower.stocking_rate %}{{ grower.stocking_rate }}{% else %}N/A{% endif %}
-                    </h2>
-                    <p class="text-muted">Trees per Hectare</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h2 class="text-info">
-                        {% if grower.farm_size_hectares %}{{ grower.farm_size_hectares }}{% else %}N/A{% endif %}
-                    </h2>
-                    <p class="text-muted">Farm Size (Ha)</p>
-                </div>
-            </div>
+        <div class="col-12 text-center">
+            <h1 class="display-4 mb-3">🥭 Mango Surveillance Calculator</h1>
+            <p class="lead text-muted">Calculate surveillance time and record detailed inspection data</p>
         </div>
     </div>
 
-    <!-- Surveillance Results -->
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header">
-                    <h4>⏱️ Surveillance Effort Calculation</h4>
-                </div>
-                <div class="card-body">
-                    {% if surveillance_calculation %}
-                    <div class="row text-center mb-4">
-                        <div class="col-md-4">
-                            <h2 class="text-primary">{{ surveillance_calculation.total_time_hours }}</h2>
-                            <p class="text-muted">Total Hours per Session</p>
-                        </div>
-                        <div class="col-md-4">
-                            <h2 class="text-warning">{{ surveillance_calculation.average_time_per_tree }}</h2>
-                            <p class="text-muted">Minutes per Tree</p>
-                        </div>
-                        <div class="col-md-4">
-                            <h2 class="text-info">{{ surveillance_calculation.monthly_effort_hours }}</h2>
-                            <p class="text-muted">Monthly Hours</p>
-                        </div>
-                    </div>
-
-                    <h5>📍 Location Breakdown</h5>
-                    {% for location_data in surveillance_calculation.location_breakdown %}
-                    <div class="alert alert-light">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h6><strong>{{ location_data.location.name }}</strong></h6>
-                                <small class="text-muted">{{ location_data.location.address }}</small>
-                            </div>
-                            <div class="col-md-2 text-center">
-                                <strong>{{ location_data.tree_count }}</strong><br>
-                                <small>Trees</small>
-                            </div>
-                            <div class="col-md-2 text-center">
-                                <strong>{{ location_data.estimated_minutes }}</strong><br>
-                                <small>Minutes</small>
-                            </div>
-                            <div class="col-md-2 text-center">
-                                <strong>{{ location_data.estimated_hours }}</strong><br>
-                                <small>Hours</small>
-                            </div>
-                        </div>
-                    </div>
-                    {% empty %}
-                    <div class="alert alert-warning">
-                        ⚠️ No locations with trees found. Please add locations and trees to your property.
-                    </div>
-                    {% endfor %}
-
-                    {% if surveillance_calculation.frequency_recommendation %}
-                    <div class="alert alert-info">
-                        <h6>📅 Recommended Frequency:</h6>
-                        <strong>{{ surveillance_calculation.frequency_recommendation.description }}</strong><br>
-                        <small>{{ surveillance_calculation.frequency_recommendation.annual_sessions }} sessions per year</small>
-                    </div>
-                    {% endif %}
-
-                    {% else %}
-                    <div class="alert alert-warning">
-                        <h5>⚠️ Setup Required</h5>
-                        <p>To calculate surveillance effort, please:</p>
-                        <ul>
-                            <li>Add locations to your property</li>
-                            <li>Add mango trees to each location</li>
-                            <li>Update your farm details (tree count, size)</li>
+    <!-- Data Collection Requirements -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="data-collection-section">
+                <h3><i class="fas fa-clipboard-list"></i> Surveillance Data Collection</h3>
+                <p class="mb-4">This system captures all required surveillance information:</p>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success"></i> <strong>Plant Parts Surveillance:</strong> Track different parts (leaves, fruit, branches, trunk, roots)</li>
+                            <li><i class="fas fa-check text-success"></i> <strong>Pest/Disease Identification:</strong> Record which threats affect which plant parts</li>
+                            <li><i class="fas fa-check text-success"></i> <strong>Location Tracking:</strong> GPS coordinates and detailed location data</li>
                         </ul>
                     </div>
-                    {% endif %}
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success"></i> <strong>Time Recording:</strong> Start/end times, duration, weather conditions</li>
+                            <li><i class="fas fa-check text-success"></i> <strong>Stocking Rate Analysis:</strong> Trees per hectare calculations</li>
+                            <li><i class="fas fa-check text-success"></i> <strong>Historical Data:</strong> Complete surveillance history by grower</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#surveillanceModal">
+                        <i class="fas fa-plus"></i> Start New Surveillance Session
+                    </button>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Plant Parts Guide -->
-            {% if plant_parts %}
-            <div class="card mt-4">
-                <div class="card-header">
-                    <h4>🌿 Plant Parts Surveillance Guide</h4>
+    <!-- Main Surveillance Results -->
+    {% if surveillance_calculation %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="summary-card">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h2 class="display-6">{{ surveillance_calculation.total_time_hours }}</h2>
+                        <p class="mb-0">Hours per Session</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h2 class="display-6">{{ total_trees }}</h2>
+                        <p class="mb-0">Mango Trees</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h2 class="display-6">{{ locations.count }}</h2>
+                        <p class="mb-0">Farm Locations</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h2 class="display-6">{{ surveillance_calculation.monthly_effort_hours }}</h2>
+                        <p class="mb-0">Monthly Hours</p>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <p class="text-muted">Different pests and diseases affect different parts of mango trees:</p>
-                    <div class="row">
-                        {% for part in plant_parts %}
-                        <div class="col-md-6 mb-3">
-                            <div class="border rounded p-3">
-                                <h6>{{ part.name }}</h6>
-                                <p class="mb-1">{{ part.description|truncatewords:15 }}</p>
-                                <span class="badge bg-{% if part.surveillance_priority >= 4 %}danger{% elif part.surveillance_priority >= 3 %}warning{% else %}success{% endif %}">
-                                    Priority {{ part.surveillance_priority }}/5
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="stat-card">
+                <h3 class="mb-4">📊 Detailed Surveillance Analysis</h3>
+                
+                <!-- Location Analysis with Stocking Rates -->
+                <h5 class="mb-3">📍 Location Analysis (Stocking Rates Included)</h5>
+                {% for location_data in surveillance_calculation.location_breakdown %}
+                <div class="location-card">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <h6><strong>{{ location_data.location.name }}</strong></h6>
+                            <small class="text-muted">{{ location_data.location.address|truncatewords:8 }}</small>
+                            {% if location_data.location.gps_latitude and location_data.location.gps_longitude %}
+                                <br><small><i class="fas fa-map-marker-alt"></i> {{ location_data.location.gps_latitude|floatformat:6 }}, {{ location_data.location.gps_longitude|floatformat:6 }}</small>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <strong>{{ location_data.tree_count }}</strong><br>
+                            <small>Trees</small>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <strong>{{ location_data.adjusted_minutes }}</strong><br>
+                            <small>Minutes</small>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            {% if location_data.stocking_rate %}
+                                <span class="badge bg-success text-white">
+                                    {{ location_data.stocking_rate|floatformat:1 }} trees/ha
                                 </span>
+                                <br><small>Stocking Rate</small>
+                            {% else %}
+                                <small class="text-muted">Add area data</small>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            {% if location_data.stocking_multiplier != 1.0 %}
+                                <span class="badge bg-warning">
+                                    Density Adjustment: {{ location_data.stocking_multiplier }}x
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Plant Parts Surveillance -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="stat-card">
+                <h4>🌿 Plant Parts Surveillance</h4>
+                <p class="text-muted mb-3">Different pests/diseases affect different plant parts</p>
+                
+                {% for part in plant_parts_data %}
+                <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                    <div>
+                        <strong>{{ part.name }}</strong><br>
+                        <small class="text-muted">Priority {{ part.priority }}/5 | {{ part.time_factor }}x time factor</small>
+                    </div>
+                    <div class="text-end">
+                        <div class="mb-1">
+                            {% for threat in part.threats %}
+                                <span class="badge bg-warning">{{ threat }}</span>
+                            {% endfor %}
+                        </div>
+                        <small>Common threats</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="stat-card">
+                <h4>📊 Historical Surveillance Data</h4>
+                
+                {% if historical_summary.total_records > 0 %}
+                <div class="row text-center mb-3">
+                    <div class="col-4">
+                        <h3 class="text-primary">{{ historical_summary.total_records }}</h3>
+                        <small>Sessions</small>
+                    </div>
+                    <div class="col-4">
+                        <h3 class="text-success">{{ historical_summary.record_types.tree_inspections }}</h3>
+                        <small>Inspections</small>
+                    </div>
+                    <div class="col-4">
+                        <h3 class="text-info">
+                            {% if historical_summary.date_range.earliest %}
+                                {{ historical_summary.date_range.earliest|date:"M Y" }}
+                            {% else %}
+                                Ready
+                            {% endif %}
+                        </h3>
+                        <small>Since</small>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <strong>Data Isolation:</strong> Your surveillance data is completely separate from other growers.
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No surveillance data recorded yet.</p>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#surveillanceModal">
+                        Start Your First Session
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Stocking Rate Analysis -->
+    {% if stocking_analysis.locations_analyzed %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="stat-card">
+                <h4>🌾 Stocking Rate Analysis</h4>
+                <p class="text-muted mb-3">Different farms have different tree densities affecting surveillance time</p>
+                
+                <div class="row">
+                    {% for analysis in stocking_analysis.locations_analyzed %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-{{ analysis.color }}">
+                            <div class="card-body">
+                                <h6>{{ analysis.location.name }}</h6>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ analysis.rate }} trees/hectare</strong><br>
+                                        <span class="badge bg-{{ analysis.color }}">{{ analysis.classification }}</span>
+                                    </div>
+                                    <div class="text-end">
+                                        <small>{{ analysis.impact }}</small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        {% endfor %}
                     </div>
-                </div>
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- Sidebar -->
-        <div class="col-lg-4">
-            <!-- Quick Actions -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5>⚡ Quick Actions</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="{% url 'location_create' %}" class="btn btn-primary">
-                            🗺️ Add Location
-                        </a>
-                        <a href="{% url 'tree_create' %}" class="btn btn-success">
-                            🌳 Add Trees
-                        </a>
-                        <a href="{% url 'crud_dashboard' %}" class="btn btn-info">
-                            📊 Management Dashboard
-                        </a>
-                        <a href="{% url 'threat_list' %}" class="btn btn-outline-secondary">
-                            🔍 View Threats
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Farm Details -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5>🏡 Farm Details</h5>
-                </div>
-                <div class="card-body">
-                    <p><strong>Farm:</strong> {{ grower.farm_name|default:"Not set" }}</p>
-                    <p><strong>Region:</strong> {{ grower.region|default:"Not set" }}</p>
-                    <p><strong>Tree Count:</strong> {{ grower.mango_tree_count|default:"Not set" }}</p>
-                    <p><strong>Farm Size:</strong> 
-                        {% if grower.farm_size_hectares %}{{ grower.farm_size_hectares }} ha{% else %}Not set{% endif %}
-                    </p>
-                    <p><strong>Stocking Rate:</strong> 
-                        {% if grower.stocking_rate %}{{ grower.stocking_rate }} trees/ha{% else %}Not set{% endif %}
-                    </p>
-                    <a href="{% url 'crud_dashboard' %}" class="btn btn-sm btn-outline-primary">
-                        ✏️ Update Details
-                    </a>
-                </div>
-            </div>
-
-            <!-- High Priority Threats -->
-            {% if high_priority_threats %}
-            <div class="card">
-                <div class="card-header">
-                    <h5>⚠️ High Priority Threats</h5>
-                </div>
-                <div class="card-body">
-                    {% for threat in high_priority_threats %}
-                    <div class="border-bottom pb-2 mb-2">
-                        <h6>{{ threat.name }}</h6>
-                        <p class="small text-muted">{{ threat.description|truncatewords:10 }}</p>
-                        <span class="badge bg-danger">{{ threat.get_threat_type_display }}</span>
-                    </div>
-                    {% empty %}
-                    <p class="text-muted">No high priority threats identified.</p>
                     {% endfor %}
                 </div>
             </div>
-            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Action Panel -->
+    <div class="row">
+        <div class="col-12">
+            <div class="stat-card">
+                {% if total_trees == 0 %}
+                <!-- New User Setup -->
+                <div class="text-center">
+                    <h3>👋 Welcome to Mango Surveillance Calculator!</h3>
+                    <p class="mb-4">Set up your farm to start recording detailed surveillance data.</p>
+                    
+                    <div class="row text-start mt-4">
+                        <div class="col-md-4">
+                            <h5><span class="badge bg-primary me-2">1</span>Add Locations</h5>
+                            <p>Include GPS coordinates and area data for stocking rate calculations</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h5><span class="badge bg-primary me-2">2</span>Register Trees</h5>
+                            <p>Add mango trees with detailed variety and age information</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h5><span class="badge bg-primary me-2">3</span>Start Surveillance</h5>
+                            <p>Record time, location, plant parts, and pest/disease findings</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <a href="{% url 'location_create' %}" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-map-marker-alt"></i> Add Your First Location
+                    </a>
+                    <a href="{% url 'about' %}" class="btn btn-outline-info">
+                        <i class="fas fa-info-circle"></i> Learn More
+                    </a>
+                </div>
+                
+                {% else %}
+                <!-- Configured system -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>🎯 Your Farm Status</h5>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success"></i> {{ total_trees }} mango trees registered</li>
+                            <li><i class="fas fa-check text-success"></i> {{ locations.count }} location{{ locations.count|pluralize }} configured</li>
+                            <li><i class="fas fa-check text-success"></i> Surveillance time calculated</li>
+                            <li><i class="fas fa-check text-success"></i> Ready for data collection</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>🚀 Quick Actions</h5>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#surveillanceModal">
+                                <i class="fas fa-play"></i> Start Surveillance Session
+                            </button>
+                            <a href="{% url 'tree_create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Add More Trees
+                            </a>
+                            <a href="{% url 'surveillance_history' %}" class="btn btn-info">
+                                <i class="fas fa-history"></i> View Historical Data
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Surveillance Data Collection Modal -->
+<div class="modal fade" id="surveillanceModal" tabindex="-1" aria-labelledby="surveillanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="surveillanceModalLabel">🥭 Record Surveillance Session</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="surveillanceForm" method="post" action="{% url 'surveillance_record_create' %}">
+                    {% csrf_token %}
+                    
+                    <!-- Location and Time Information -->
+                    <div class="surveillance-form">
+                        <h6><i class="fas fa-map-marker-alt"></i> Location & Time Information</h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="location" class="form-label">Location *</label>
+                                <select class="form-select" id="location" name="location" required>
+                                    <option value="">Select location...</option>
+                                    {% for location in locations %}
+                                    <option value="{{ location.id }}">{{ location.name }} - {{ location.address|truncatewords:4 }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="date" class="form-label">Surveillance Date *</label>
+                                <input type="date" class="form-control" id="date" name="date" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <label for="start_time" class="form-label">Start Time</label>
+                                <input type="time" class="form-control" id="start_time" name="start_time">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="end_time" class="form-label">End Time</label>
+                                <input type="time" class="form-control" id="end_time" name="end_time">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="temperature" class="form-label">Temperature (°C)</label>
+                                <input type="number" class="form-control" id="temperature" name="temperature_celsius" step="0.1">
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <label for="weather" class="form-label">Weather Conditions</label>
+                            <select class="form-select" id="weather" name="weather_conditions">
+                                <option value="">Select weather...</option>
+                                <option value="sunny">Sunny</option>
+                                <option value="partly_cloudy">Partly Cloudy</option>
+                                <option value="cloudy">Cloudy</option>
+                                <option value="rainy">Rainy</option>
+                                <option value="windy">Windy</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Plant Parts Surveillance -->
+                    <div class="surveillance-form">
+                        <h6><i class="fas fa-leaf"></i> Plant Parts to Survey</h6>
+                        <p class="text-muted small">Select which plant parts you will inspect (different pests affect different parts)</p>
+                        
+                        <div class="row">
+                            {% for part in plant_parts_data %}
+                            <div class="col-md-6 col-lg-4">
+                                <div class="plant-part-selector" data-part="{{ part.name }}">
+                                    <input type="checkbox" name="plant_parts" value="{{ part.name }}" id="part_{{ forloop.counter }}" class="form-check-input me-2">
+                                    <label for="part_{{ forloop.counter }}" class="form-check-label">
+                                        <strong>{{ part.name }}</strong><br>
+                                        <small>Priority {{ part.priority }}/5</small>
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Pest/Disease Identification -->
+                    <div class="surveillance-form">
+                        <h6><i class="fas fa-bug"></i> Pests & Diseases Found</h6>
+                        <p class="text-muted small">Record any threats you observe during surveillance</p>
+                        
+                        <div class="row">
+                            {% for threat in high_priority_threats %}
+                            <div class="col-md-6">
+                                <div class="pest-disease-checkbox">
+                                    <input type="checkbox" name="threats_found" value="{{ threat.id }}" id="threat_{{ threat.id }}" class="form-check-input me-2">
+                                    <label for="threat_{{ threat.id }}" class="form-check-label">
+                                        <strong>{{ threat.name }}</strong><br>
+                                        <small class="text-muted">{{ threat.threat_type|title }} - {{ threat.risk_level|title }} Risk</small>
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Additional Notes -->
+                    <div class="surveillance-form">
+                        <h6><i class="fas fa-sticky-note"></i> Surveillance Notes</h6>
+                        <textarea class="form-control" name="notes" rows="4" placeholder="Record detailed observations, actions taken, follow-up needed, etc."></textarea>
+                    </div>
+                    
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="surveillanceForm" class="btn btn-success">
+                    <i class="fas fa-save"></i> Save Surveillance Record
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set today's date as default
+    document.getElementById('date').valueAsDate = new Date();
+    
+    // Plant part selector interactions
+    document.querySelectorAll('.plant-part-selector').forEach(selector => {
+        selector.addEventListener('click', function() {
+            const checkbox = this.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+            this.classList.toggle('selected', checkbox.checked);
+        });
+    });
+    
+    // Pest/disease selector interactions
+    document.querySelectorAll('.pest-disease-checkbox').forEach(selector => {
+        selector.addEventListener('click', function() {
+            const checkbox = this.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+            this.classList.toggle('selected', checkbox.checked);
+        });
+    });
+    
+    // Auto-calculate surveillance duration
+    const startTime = document.getElementById('start_time');
+    const endTime = document.getElementById('end_time');
+    
+    function calculateDuration() {
+        if (startTime.value && endTime.value) {
+            const start = new Date('2000-01-01 ' + startTime.value);
+            const end = new Date('2000-01-01 ' + endTime.value);
+            const diff = (end - start) / 1000 / 60; // minutes
+            
+            if (diff > 0) {
+                // Could display duration somewhere
+                console.log(`Surveillance duration: ${diff} minutes`);
+            }
+        }
+    }
+    
+    startTime.addEventListener('change', calculateDuration);
+    endTime.addEventListener('change', calculateDuration);
+    
+    // Form validation
+    document.getElementById('surveillanceForm').addEventListener('submit', function(e) {
+        const location = document.getElementById('location').value;
+        const date = document.getElementById('date').value;
+        
+        if (!location || !date) {
+            e.preventDefault();
+            alert('Please select a location and date for your surveillance session.');
+            return;
+        }
+        
+        // Check if at least one plant part is selected
+        const plantParts = document.querySelectorAll('input[name="plant_parts"]:checked');
+        if (plantParts.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one plant part to survey.');
+            return;
+        }
+    });
+});
+</script>
 {% endblock %}

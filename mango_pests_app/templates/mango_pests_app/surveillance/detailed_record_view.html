@@ -1,0 +1,461 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Surveillance Record - Threat Analysis{% endblock %}
+
+{% block extra_css %}
+<style>
+    .threat-alert {
+        border-left: 4px solid #dc3545;
+        background: #f8d7da;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 0 8px 8px 0;
+    }
+    
+    .no-threats-alert {
+        border-left: 4px solid #28a745;
+        background: #d1eddf;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 0 8px 8px 0;
+    }
+    
+    .threat-card {
+        border: 2px solid #ffc107;
+        background: #fff3cd;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .plant-part-card {
+        border: 1px solid #28a745;
+        background: #d4edda;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+    }
+    
+    .severity-badge-large {
+        font-size: 1.1em;
+        padding: 8px 16px;
+        border-radius: 20px;
+    }
+    
+    .findings-section {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .action-required-banner {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    
+    .summary-stats {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            
+            <!-- Header with Status -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3><i class="fas fa-clipboard-list"></i> Surveillance Session Details</h3>
+                            <p class="mb-0 text-muted">{{ record.location.name }} - {{ record.date|date:"F d, Y" }}</p>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-{% if record.completed %}success{% else %}warning{% endif %} fs-6">
+                                {% if record.completed %}Completed{% else %}In Progress{% endif %}
+                            </span>
+                            {% if action_required_count > 0 %}
+                                <br><span class="badge bg-danger fs-6 mt-1">Action Required</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Required Banner -->
+            {% if action_required_count > 0 %}
+            <div class="action-required-banner">
+                <h5><i class="fas fa-exclamation-triangle"></i> IMMEDIATE ACTION REQUIRED</h5>
+                <p class="mb-0">{{ action_required_count }} tree{{ action_required_count|pluralize }} require{{ action_required_count|pluralize:"s," }} immediate attention due to threat detection.</p>
+            </div>
+            {% endif %}
+            
+            <!-- Threat Summary -->
+            {% if threats_summary %}
+            <div class="threat-alert">
+                <h5><i class="fas fa-bug"></i> Threats Detected During Surveillance</h5>
+                <div class="row">
+                    {% for threat_name, threat_data in threats_summary.items %}
+                    <div class="col-md-6 mb-2">
+                        <div class="threat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ threat_name }}</h6>
+                                    <small class="text-muted">Found on {{ threat_data.count }} tree{{ threat_data.count|pluralize }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-{% if threat_data.threat_type == 'pest' %}primary{% else %}info{% endif %}">
+                                        {{ threat_data.threat_type|title }}
+                                    </span><br>
+                                    <span class="badge bg-{% if threat_data.risk_level == 'high' %}danger{% elif threat_data.risk_level == 'moderate' %}warning{% else %}success{% endif %}">
+                                        {{ threat_data.risk_level|title }} Risk
+                                    </span>
+                                </div>
+                            </div>
+                            {% if threat_data.affected_parts %}
+                            <div class="mt-2">
+                                <small><strong>Affected Plant Parts:</strong></small><br>
+                                {% for part in threat_data.affected_parts %}
+                                    <span class="badge bg-secondary">{{ part }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="no-threats-alert">
+                <h5><i class="fas fa-check-circle"></i> No Threats Detected</h5>
+                <p class="mb-0">Excellent! No pests or diseases were found during this surveillance session. Trees appear healthy.</p>
+            </div>
+            {% endif %}
+            
+            <!-- Summary Statistics -->
+            <div class="summary-stats">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h4 class="text-primary">{{ record.trees_surveyed_count }}</h4>
+                        <p class="mb-0">Trees Surveyed</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h4 class="text-success">
+                            {% if record.total_time_minutes %}
+                                {{ record.total_time_minutes }} min
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </h4>
+                        <p class="mb-0">Total Time</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h4 class="{% if threats_found_count > 0 %}text-warning{% else %}text-success{% endif %}">
+                            {{ threats_found_count }}
+                        </h4>
+                        <p class="mb-0">Threat{{ threats_found_count|pluralize }} Found</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h4 class="{% if action_required_count > 0 %}text-danger{% else %}text-success{% endif %}">
+                            {{ action_required_count }}
+                        </h4>
+                        <p class="mb-0">Action Required</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Session Information -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-info-circle"></i> Session Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Location:</strong></td>
+                                    <td>{{ record.location.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Address:</strong></td>
+                                    <td>{{ record.location.address|truncatewords:8 }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Date:</strong></td>
+                                    <td>{{ record.date|date:"F d, Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Time:</strong></td>
+                                    <td>
+                                        {% if record.start_time and record.end_time %}
+                                            {{ record.start_time }} - {{ record.end_time }}
+                                        {% elif record.start_time %}
+                                            Started at {{ record.start_time }}
+                                        {% else %}
+                                            Not recorded
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Weather:</strong></td>
+                                    <td>{{ record.weather_conditions|default:"Not recorded" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Temperature:</strong></td>
+                                    <td>
+                                        {% if record.temperature_celsius %}
+                                            {{ record.temperature_celsius }}°C
+                                        {% else %}
+                                            Not recorded
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-map-marker-alt"></i> Location Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-borderless">
+                                {% if record.location.gps_latitude and record.location.gps_longitude %}
+                                <tr>
+                                    <td><strong>GPS:</strong></td>
+                                    <td>{{ record.location.gps_latitude|floatformat:6 }}, {{ record.location.gps_longitude|floatformat:6 }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if record.location.area_hectares %}
+                                <tr>
+                                    <td><strong>Area:</strong></td>
+                                    <td>{{ record.location.area_hectares }} hectares</td>
+                                </tr>
+                                {% endif %}
+                                {% if stocking_rate %}
+                                <tr>
+                                    <td><strong>Stocking Rate:</strong></td>
+                                    <td>
+                                        {{ stocking_rate|floatformat:1 }} trees/ha
+                                        <span class="badge bg-{{ stocking_classification.class }}">{{ stocking_classification.label }}</span>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% if record.location.soil_type %}
+                                <tr>
+                                    <td><strong>Soil Type:</strong></td>
+                                    <td>{{ record.location.get_soil_type_display|default:record.location.soil_type }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if record.location.irrigation_type %}
+                                <tr>
+                                    <td><strong>Irrigation:</strong></td>
+                                    <td>{{ record.location.get_irrigation_type_display|default:record.location.irrigation_type }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Plant Parts Inspected -->
+            {% if plant_parts_summary %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-leaf"></i> Plant Parts Inspected</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for part_name, part_data in plant_parts_summary.items %}
+                        <div class="col-md-4 mb-3">
+                            <div class="plant-part-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">{{ part_name }}</h6>
+                                        <small class="text-muted">{{ part_data.count }} tree{{ part_data.count|pluralize }} inspected</small>
+                                    </div>
+                                    <span class="badge bg-info">Priority {{ part_data.priority }}/5</span>
+                                </div>
+                                {% if part_data.threats %}
+                                <div class="mt-2">
+                                    <small><strong>Threats found:</strong></small><br>
+                                    {% for threat in part_data.threats %}
+                                        <span class="badge bg-warning">{{ threat }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <div class="mt-2">
+                                    <span class="badge bg-success">No threats detected</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Detailed Findings and Notes -->
+            {% if record.notes %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-sticky-note"></i> Detailed Findings & Notes</h5>
+                </div>
+                <div class="card-body">
+                    <div class="findings-section">
+                        <pre style="white-space: pre-wrap; font-family: inherit;">{{ record.notes }}</pre>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Individual Tree Inspections -->
+            {% if inspections %}
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-tree"></i> Individual Tree Inspections ({{ total_inspections }})</h5>
+                    <div>
+                        {% if threats_found_count > 0 %}
+                            <span class="badge bg-warning">{{ threats_found_count }} with threats</span>
+                        {% endif %}
+                        {% if action_required_count > 0 %}
+                            <span class="badge bg-danger">{{ action_required_count }} need action</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Tree ID</th>
+                                    <th>Variety</th>
+                                    <th>Age</th>
+                                    <th>Plant Parts</th>
+                                    <th>Threats Found</th>
+                                    <th>Severity</th>
+                                    <th>Action Required</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for inspection in inspections %}
+                                <tr class="{% if inspection.action_required %}table-warning{% endif %}">
+                                    <td><strong>{{ inspection.tree.tree_id }}</strong></td>
+                                    <td>{{ inspection.tree.get_variety_display }}</td>
+                                    <td>{{ inspection.tree.age }} years</td>
+                                    <td>
+                                        {% for part in inspection.plant_parts_checked.all %}
+                                            <span class="badge bg-info">{{ part.name }}</span>
+                                        {% empty %}
+                                            <span class="text-muted">None specified</span>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for threat in inspection.threats_found.all %}
+                                            <span class="badge bg-{% if threat.threat_type == 'pest' %}warning{% else %}danger{% endif %}">
+                                                {{ threat.name }}
+                                            </span>
+                                        {% empty %}
+                                            <span class="badge bg-success">None</span>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        <span class="severity-badge-large badge bg-{% if inspection.severity_level == 'high' %}danger{% elif inspection.severity_level == 'moderate' %}warning{% elif inspection.severity_level == 'low' %}info{% else %}success{% endif %}">
+                                            {{ inspection.get_severity_level_display }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if inspection.action_required %}
+                                            <i class="fas fa-exclamation-triangle text-danger fa-lg"></i>
+                                        {% else %}
+                                            <i class="fas fa-check text-success fa-lg"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if inspection.inspection_time_minutes %}
+                                            {{ inspection.inspection_time_minutes|floatformat:0 }} min
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% if inspection.findings %}
+                                <tr class="{% if inspection.action_required %}table-warning{% endif %}">
+                                    <td colspan="8">
+                                        <small><strong>Findings:</strong> {{ inspection.findings }}</small>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Recommendations and Next Steps -->
+            {% if threats_found_count > 0 or action_required_count > 0 %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-lightbulb"></i> Recommendations & Next Steps</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-clipboard-check"></i> Immediate Actions Recommended:</h6>
+                        <ul class="mb-0">
+                            {% if action_required_count > 0 %}
+                                <li><strong>Priority:</strong> {{ action_required_count }} tree{{ action_required_count|pluralize }} require immediate attention</li>
+                            {% endif %}
+                            {% if threats_summary %}
+                                <li><strong>Treatment:</strong> Consider appropriate treatment for detected threats</li>
+                                <li><strong>Monitoring:</strong> Increase surveillance frequency for affected areas</li>
+                                <li><strong>Prevention:</strong> Review farm practices to prevent spread</li>
+                            {% endif %}
+                            <li><strong>Documentation:</strong> Keep detailed records of treatment outcomes</li>
+                            <li><strong>Follow-up:</strong> Schedule next surveillance session within 7-14 days</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Actions -->
+            <div class="text-center">
+                <a href="{% url 'surveillance_history' %}" class="btn btn-primary">
+                    <i class="fas fa-history"></i> View All Records
+                </a>
+                <a href="{% url 'surveillance_record_create' %}?location={{ record.location.pk }}" class="btn btn-success">
+                    <i class="fas fa-plus"></i> New Session (Same Location)
+                </a>
+                <a href="{% url 'surveillance_record_create' %}" class="btn btn-info">
+                    <i class="fas fa-clipboard-list"></i> New Session (Any Location)
+                </a>
+                <a href="{% url 'surveillance_calculator' %}" class="btn btn-secondary">
+                    <i class="fas fa-calculator"></i> Back to Calculator
+                </a>
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}

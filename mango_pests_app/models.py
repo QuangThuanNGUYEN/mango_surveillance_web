@@ -1,5 +1,3 @@
-# models.py - ENHANCED FOR SURVEILLANCE CALCULATOR
-
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
@@ -9,6 +7,7 @@ from decimal import Decimal
 import datetime
 
 class Grower(models.Model):
+    """Mango grower profile with surveillance settings"""
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     contact_number = models.CharField(max_length=15, null=True, blank=True)
     farm_name = models.CharField(max_length=100, null=True, blank=True)
@@ -16,7 +15,7 @@ class Grower(models.Model):
     mango_tree_count = models.PositiveIntegerField(null=True, blank=True)
     notes = models.TextField(null=True, blank=True)
     
-    # New fields for surveillance calculations
+    # Surveillance calculation fields
     farm_size_hectares = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     stocking_rate = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, 
                                       help_text="Trees per hectare")
@@ -31,26 +30,25 @@ class Grower(models.Model):
         if not all([self.mango_tree_count, self.farm_size_hectares]):
             return None
         
-        # Base calculation: trees * complexity factor * risk multiplier
         base_effort_hours = self.mango_tree_count * 0.1  # 6 minutes per tree
         
         # Adjust for farm density
         if self.stocking_rate:
-            if self.stocking_rate > 100:  # High density
+            if self.stocking_rate > 100:
                 base_effort_hours *= 1.2
-            elif self.stocking_rate < 50:  # Low density
+            elif self.stocking_rate < 50:
                 base_effort_hours *= 0.9
         
         return round(base_effort_hours, 2)
 
-
 class Location(models.Model):
+    """Farm locations with GPS and area data"""
     name = models.CharField(max_length=100)
     address = models.TextField()
     description = models.TextField(null=True, blank=True)
     grower = models.ForeignKey(Grower, on_delete=models.CASCADE, related_name="locations", null=True, blank=True)
     
-    # Enhanced location data for surveillance
+    # Enhanced location data
     gps_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     gps_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     area_hectares = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
@@ -60,20 +58,24 @@ class Location(models.Model):
     def __str__(self):
         return f"{self.name} - {self.address}"
 
-
 class PlantPart(models.Model):
-    """Different parts of plants that can be surveilled"""
+    """Plant parts that can be surveilled with priority levels"""
     name = models.CharField(max_length=50, unique=True)
     description = models.TextField()
     surveillance_priority = models.IntegerField(default=1, 
                                               validators=[MinValueValidator(1), MaxValueValidator(5)],
                                               help_text="Priority 1=Low, 5=Critical")
+    time_multiplier = models.DecimalField(max_digits=3, decimal_places=2, default=1.0,
+                                        help_text="Multiplier for surveillance time")
+    
+    class Meta:
+        ordering = ['-surveillance_priority', 'name']
     
     def __str__(self):
-        return self.name
-
+        return f"{self.name} (Priority {self.surveillance_priority})"
 
 class MangoTree(models.Model):
+    """Individual mango trees with surveillance calculations"""
     VARIETY_CHOICES = [
         ('kensington_pride', 'Kensington Pride'),
         ('calypso', 'Calypso'),
@@ -97,7 +99,7 @@ class MangoTree(models.Model):
     variety = models.CharField(max_length=50, choices=VARIETY_CHOICES, default='kensington_pride')
     age_group = models.CharField(max_length=20, choices=AGE_GROUP_CHOICES, null=True, blank=True)
     
-    # Enhanced surveillance data
+    # Physical characteristics
     height_meters = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
     canopy_diameter_meters = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
     health_status = models.CharField(max_length=20, 
@@ -122,9 +124,8 @@ class MangoTree(models.Model):
 
     def calculate_surveillance_time_minutes(self):
         """Calculate recommended surveillance time per tree"""
-        base_time = 5  # Base 5 minutes per tree
+        base_time = 5
         
-        # Adjust for age group
         age_multipliers = {
             'young': 0.7,
             'juvenile': 0.9,
@@ -132,14 +133,12 @@ class MangoTree(models.Model):
             'old': 1.2
         }
         
-        # Adjust for tree size
         size_multiplier = 1.0
         if self.height_meters and self.height_meters > 4:
             size_multiplier = 1.3
         elif self.height_meters and self.height_meters < 2:
             size_multiplier = 0.8
             
-        # Adjust for health status
         health_multipliers = {
             'excellent': 0.8,
             'good': 1.0,
@@ -154,9 +153,8 @@ class MangoTree(models.Model):
         
         return round(total_time, 1)
 
-
-
 class MangoThreat(models.Model):
+    """Mango pests and diseases database"""
     THREAT_TYPES = [
         ('pest', 'Pest'),
         ('disease', 'Disease'),
@@ -172,11 +170,8 @@ class MangoThreat(models.Model):
     slug = models.SlugField(max_length=120, unique=True, blank=True)
     description = models.TextField()
     details = models.TextField()
-    
-    # CHANGE: Use ImageField instead of CharField
     image = models.ImageField(upload_to='threat_images/', null=True, blank=True, 
                              help_text="Upload an image of this threat")
-    
     threat_type = models.CharField(max_length=10, choices=THREAT_TYPES)
     risk_level = models.CharField(max_length=10, choices=RISK_LEVELS, default='moderate')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -196,11 +191,8 @@ class MangoThreat(models.Model):
     def __str__(self):
         return f"{self.name} ({self.get_threat_type_display()})"
 
-
-
-
 class SurveillancePlan(models.Model):
-    """Master surveillance plan for a grower's property"""
+    """Master surveillance plan for grower's property"""
     grower = models.ForeignKey(Grower, on_delete=models.CASCADE, related_name="surveillance_plans")
     name = models.CharField(max_length=100)
     locations = models.ManyToManyField(Location)
@@ -211,7 +203,6 @@ class SurveillancePlan(models.Model):
     end_date = models.DateField(null=True, blank=True)
     
     total_estimated_hours = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
-    
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
@@ -241,7 +232,6 @@ class SurveillancePlan(models.Model):
             'tree_count': tree_count,
             'average_minutes_per_tree': round(total_minutes / tree_count if tree_count > 0 else 0, 1)
         }
-
 
 class SurveillanceRecord(models.Model):
     """Individual surveillance session record"""
@@ -279,14 +269,12 @@ class SurveillanceRecord(models.Model):
             return self.total_time_minutes
         return None
 
-
 class TreeInspection(models.Model):
     """Individual tree inspection within a surveillance record"""
     surveillance_record = models.ForeignKey(SurveillanceRecord, on_delete=models.CASCADE, 
                                           related_name="tree_inspections")
     tree = models.ForeignKey(MangoTree, on_delete=models.CASCADE, related_name="inspections")
     plant_parts_checked = models.ManyToManyField(PlantPart)
-    
     threats_found = models.ManyToManyField(MangoThreat, blank=True)
     
     # Inspection results
@@ -307,8 +295,7 @@ class TreeInspection(models.Model):
     def __str__(self):
         return f"Inspection of {self.tree} on {self.surveillance_record.date}"
 
-
-# Keep original models for backward compatibility
+# Legacy models for backward compatibility
 class Pest(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
@@ -317,7 +304,6 @@ class Pest(models.Model):
     def __str__(self):
         return f"{self.name} - Risk: {self.risk_level}"
 
-
 class Disease(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
@@ -325,7 +311,6 @@ class Disease(models.Model):
 
     def __str__(self):
         return f"{self.name} - Risk: {self.risk_level}"
-
 
 class Inspection(models.Model):
     record = models.ForeignKey(SurveillanceRecord, on_delete=models.CASCADE, related_name="inspections")

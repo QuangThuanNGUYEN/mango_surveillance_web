@@ -1,69 +1,281 @@
-<!-- Update your crud_dashboard.html to include edit/delete buttons -->
+{% extends 'base.html' %}
+{% load static %}
 
-<!-- Recent Locations Section -->
-<div class="col-lg-4">
-    <div class="card">
-        <div class="card-header d-flex justify-content-between">
-            <h5>📍 Recent Locations</h5>
-            <a href="{% url 'location_create' %}" class="btn btn-sm btn-primary">+ Add</a>
+{% block title %}My Farm Locations{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-map-marker-alt"></i> My Farm Locations</h2>
+            <p class="text-muted">Manage your farm locations with area data and GPS coordinates</p>
         </div>
-        <div class="card-body" id="recent-locations-container">
-            {% for location in recent_locations %}
-            <div class="recent-item border rounded p-2 mb-2">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <h6 class="mb-1">{{ location.name }}</h6>
-                        <p class="mb-1 small text-muted">{{ location.address|truncatewords:8 }}</p>
-                        <span class="badge bg-info">{{ location.mango_trees.count }} trees</span>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'location_create' %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Add New Location
+            </a>
+        </div>
+    </div>
+    
+    <!-- Summary Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-primary">{{ total_locations }}</h3>
+                    <p class="mb-0">Total Locations</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-success">{{ locations_with_area }}</h3>
+                    <p class="mb-0">With Area Data</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-info">{{ locations_with_gps }}</h3>
+                    <p class="mb-0">With GPS Data</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    {% with total_trees=location_data|length %}
+                        <h3 class="text-warning">
+                            {% for data in location_data %}{{ data.tree_count }}{% if not forloop.last %} + {% endif %}{% endfor %}
+                        </h3>
+                    {% endwith %}
+                    <p class="mb-0">Total Trees</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Locations List -->
+    {% if location_data %}
+        <div class="row">
+            {% for data in location_data %}
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-map-marker-alt text-primary"></i> 
+                            {{ data.location.name }}
+                        </h5>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                                    type="button" data-bs-toggle="dropdown">
+                                Actions
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'location_update' pk=data.location.pk %}">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item text-danger" 
+                                       href="{% url 'location_delete' pk=data.location.pk %}">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="btn-group-vertical btn-group-sm" role="group">
-                        <a href="{% url 'location_update' location.pk %}" class="btn btn-outline-primary btn-sm" title="Edit">
-                            ✏️
-                        </a>
-                        <a href="{% url 'location_delete' location.pk %}" class="btn btn-outline-danger btn-sm" 
-                           onclick="return confirm('Delete {{ location.name }}?')" title="Delete">
-                            🗑️
-                        </a>
+                    <div class="card-body">
+                        
+                        <!-- Basic Information -->
+                        <div class="mb-3">
+                            <p class="text-muted mb-1">{{ data.location.address }}</p>
+                            {% if data.location.description %}
+                                <p class="small">{{ data.location.description|truncatewords:15 }}</p>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Key Metrics -->
+                        <div class="row text-center mb-3">
+                            <div class="col-4">
+                                <div class="border rounded p-2">
+                                    <strong class="text-primary">{{ data.tree_count }}</strong><br>
+                                    <small>Trees</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border rounded p-2">
+                                    {% if data.location.area_hectares %}
+                                        <strong class="text-success">{{ data.location.area_hectares }}</strong><br>
+                                        <small>Hectares</small>
+                                    {% else %}
+                                        <strong class="text-muted">—</strong><br>
+                                        <small>No Area</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border rounded p-2">
+                                    {% if data.stocking_rate %}
+                                        <strong class="text-warning">{{ data.stocking_rate|floatformat:1 }}</strong><br>
+                                        <small>Trees/Ha</small>
+                                    {% else %}
+                                        <strong class="text-muted">—</strong><br>
+                                        <small>No Rate</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- GPS Coordinates -->
+                        {% if data.has_gps_data %}
+                            <div class="mt-2">
+                                <small class="text-info">
+                                    <i class="fas fa-map"></i> 
+                                    GPS: {{ data.location.gps_latitude|floatformat:4 }}, {{ data.location.gps_longitude|floatformat:4 }}
+                                </small>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Action Needed Alerts -->
+                        {% if not data.has_area_data %}
+                            <div class="alert alert-warning alert-sm mt-3">
+                                <small>
+                                    <i class="fas fa-exclamation-triangle"></i> 
+                                    <strong>Add area data</strong> to enable stocking rate calculations
+                                </small>
+                            </div>
+                        {% endif %}
+                        
+                        {% if data.tree_count == 0 %}
+                            <div class="alert alert-info alert-sm mt-3">
+                                <small>
+                                    <i class="fas fa-info-circle"></i> 
+                                    <strong>No trees yet.</strong> 
+                                    <a href="{% url 'tree_create' %}" class="alert-link">Add trees</a> to this location
+                                </small>
+                            </div>
+                        {% endif %}
+                        
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                {% if data.tree_count > 0 %}
+                                    {{ data.tree_count }} tree{{ data.tree_count|pluralize }} registered
+                                {% else %}
+                                    Ready for trees
+                                {% endif %}
+                            </small>
+                            <div>
+                                {% if data.tree_count > 0 %}
+                                    <a href="{% url 'surveillance_record_create' %}?location={{ data.location.pk }}" 
+                                       class="btn btn-sm btn-success">
+                                        <i class="fas fa-eye"></i> Survey
+                                    </a>
+                                {% endif %}
+                                <a href="{% url 'tree_create' %}?location={{ data.location.pk }}" 
+                                   class="btn btn-sm btn-primary">
+                                    <i class="fas fa-plus"></i> Add Trees
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            {% empty %}
-            <p class="text-muted">No locations yet. <a href="{% url 'location_create' %}">Add one?</a></p>
             {% endfor %}
         </div>
-    </div>
-</div>
-
-<!-- Recent Trees Section -->
-<div class="col-lg-4">
-    <div class="card">
-        <div class="card-header d-flex justify-content-between">
-            <h5>🌳 Recent Trees</h5>
-            <a href="{% url 'tree_create' %}" class="btn btn-sm btn-success">+ Add</a>
+        
+    {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-5">
+            <i class="fas fa-map-marker-alt fa-5x text-muted mb-4"></i>
+            <h3>No Locations Yet</h3>
+            <p class="text-muted mb-4">Start by adding your first farm location with area data for accurate surveillance planning.</p>
+            <a href="{% url 'location_create' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus"></i> Add Your First Location
+            </a>
         </div>
-        <div class="card-body" id="recent-trees-container">
-            {% for tree in recent_trees %}
-            <div class="recent-item border rounded p-2 mb-2">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <h6 class="mb-1">{{ tree.tree_id }}</h6>
-                        <p class="mb-1 small">{{ tree.variety }} - Age {{ tree.age }}</p>
-                        <span class="badge bg-success">{{ tree.location.name }}</span>
+    {% endif %}
+    
+    <!-- Help Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-question-circle"></i> Why Add Area Data?</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6><i class="fas fa-calculator text-primary"></i> Stocking Rate Calculation</h6>
+                            <p class="small">Automatically calculate trees per hectare to determine farm density</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="fas fa-clock text-success"></i> Surveillance Time Adjustment</h6>
+                            <p class="small">Higher density farms require more surveillance time per session</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="fas fa-chart-line text-info"></i> Better Analytics</h6>
+                            <p class="small">Compare efficiency across different locations and densities</p>
+                        </div>
                     </div>
-                    <div class="btn-group-vertical btn-group-sm" role="group">
-                        <a href="{% url 'tree_update' tree.pk %}" class="btn btn-outline-primary btn-sm" title="Edit">
-                            ✏️
-                        </a>
-                        <a href="{% url 'tree_delete' tree.pk %}" class="btn btn-outline-danger btn-sm" 
-                           onclick="return confirm('Delete tree {{ tree.tree_id }}?')" title="Delete">
-                            🗑️
-                        </a>
+                    
+                    <div class="alert alert-info mt-3">
+                        <h6><i class="fas fa-lightbulb"></i> Density Classifications:</h6>
+                        <ul class="mb-0 small">
+                            <li><strong>Low Density:</strong> &lt;50 trees/hectare - 10% less surveillance time</li>
+                            <li><strong>Standard Density:</strong> 50-100 trees/hectare - Standard surveillance time</li>
+                            <li><strong>High Density:</strong> 100-150 trees/hectare - 20% more surveillance time</li>
+                            <li><strong>Very High Density:</strong> &gt;150 trees/hectare - 40% more surveillance time</li>
+                        </ul>
                     </div>
                 </div>
             </div>
-            {% empty %}
-            <p class="text-muted">No trees yet. <a href="{% url 'tree_create' %}">Add one?</a></p>
-            {% endfor %}
         </div>
     </div>
+    
 </div>
+
+<style>
+.alert-sm {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.card-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+.border {
+    border: 1px solid #dee2e6 !important;
+}
+</style>
+{% endblock %}
+                        
+                        <!-- Stocking Rate Classification -->
+                        {% if data.stocking_classification %}
+                            <div class="text-center mb-3">
+                                <span class="badge bg-{{ data.stocking_classification.class }} fs-6">
+                                    {{ data.stocking_classification.label }}
+                                </span>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Additional Details -->
+                        <div class="row small text-muted">
+                            <div class="col-6">
+                                {% if data.location.soil_type %}
+                                    <i class="fas fa-seedling"></i> {{ data.location.get_soil_type_display|default:data.location.soil_type }}
+                                {% endif %}
+                            </div>
+                            <div class="col-6">
+                                {% if data.location.irrigation_type %}
+                                    <i class="fas fa-tint"></i> {{ data.location.get_irrigation_type_display|default:data.location.irrigation_type }}
+                                {% endif %}

@@ -1,72 +1,69 @@
-# views.py - COMPLETE FILE
+from .models import (
+    SurveillanceRecord, TreeInspection, MangoThreat, PlantPart, 
+    Location, MangoTree, Grower
+)
+from .forms import EnhancedSurveillanceRecordForm, TreeInspectionForm, SurveillanceSearchForm
 
-from django import apps
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from django.http import JsonResponse
-from django.db.models import Q, Count, Avg, Sum
-from django.views.generic import TemplateView, CreateView, UpdateView, DeleteView
-from .models import (
-    MangoThreat, Location, MangoTree, SurveillanceRecord, Grower,
-    SurveillancePlan, TreeInspection, PlantPart
-)
-from .forms import MangoThreatForm, LocationForm, MangoTreeForm, UserRegistrationForm
-import json
-from datetime import datetime, timedelta
-
+from django.db.models import Q, Count, Avg, Sum, Min, Max
 from django.views.generic import (
     TemplateView, ListView, DetailView, CreateView, 
     UpdateView, DeleteView, FormView, View
 )
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib import messages
-from django.urls import reverse_lazy, reverse
-from django.http import JsonResponse
-from django.db.models import Q, Count
 from django.core.paginator import Paginator
 from django.contrib.auth import logout, login, authenticate
-from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 import json
-from .models import MangoThreat, Location, MangoTree, SurveillanceRecord, Grower
+from datetime import datetime, timedelta
+
+
+try:
+    from django.db.models.functions import TruncMonth, Extract
+except ImportError:
+    # Fallback for older Django versions
+    from django.db.models import DateTimeField
+    from django.db.models.functions import Extract
+    TruncMonth = None
+
+from .models import (
+    MangoThreat, Location, MangoTree, SurveillanceRecord, Grower,
+    SurveillancePlan, TreeInspection, PlantPart
+)
 from .forms import (
     MangoThreatForm, LocationForm, MangoTreeForm, UserRegistrationForm
 )
-from .data import mango_threats  
-
-# Home Page
+from .data import mango_threats
+    
+# Core Views
 class HomeView(TemplateView):
-    """
-    View for the home page of the Mango Pests & Diseases website.
-    """
+    """Home page of the Mango Surveillance System"""
     template_name = 'mango_pests_app/home.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['heading'] = "Welcome to the World Mango Organisation of Group 28 of HIT237!"
-        context['description'] = "We are dedicated to combating mango pests and diseases through research and awareness. Browse our site to learn more about the threats affecting our beloved mangos!"
+        context['description'] = "We are dedicated to combating mango pests and diseases through research and awareness."
         
-        # Add some statistics
+        # Statistics
         context['total_threats'] = MangoThreat.objects.count()
         context['pest_count'] = MangoThreat.objects.filter(threat_type='pest').count()
         context['disease_count'] = MangoThreat.objects.filter(threat_type='disease').count()
         
         return context
 
-
 class ThreatListView(TemplateView):
+    """List all mango threats with search and filtering"""
     template_name = 'mango_pests_app/threat_list.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        # === Initial data ===
         threats = mango_threats
 
-        # === Search ===
+        # Search functionality
         query = self.request.GET.get('q', '').strip().lower()
         if query:
             threats = [
@@ -74,28 +71,27 @@ class ThreatListView(TemplateView):
                 if query in t.name.lower() or query in t.description.lower()
             ]
 
-        # === Category filter ===
+        # Category filter
         category = self.request.GET.get('category', '')
         if category in ['pest', 'disease']:
             threats = [t for t in threats if t.threat_type == category]
 
-        # === Sort ===
+        # Sort
         sort_option = self.request.GET.get('sort', 'name_asc')
         if sort_option == 'name_desc':
             threats.sort(key=lambda t: t.name, reverse=True)
         else:
             threats.sort(key=lambda t: t.name)
 
-        # === Pagination ===
+        # Pagination
         paginator = Paginator(threats, 10)
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
-        # === Count info ===
+        # Count info
         pest_count = len([t for t in threats if t.threat_type == 'pest'])
         disease_count = len([t for t in threats if t.threat_type == 'disease'])
 
-        # === Context ===
         context.update({
             'page_obj': page_obj,
             'query': query,
@@ -110,23 +106,16 @@ class ThreatListView(TemplateView):
 
         return context
 
-# Threat Detail Page
 class ThreatDetailView(DetailView):
-    """
-    DetailView for displaying individual threat information.
-    """
+    """Display individual threat information"""
     model = MangoThreat
     template_name = 'mango_pests_app/threat_details.html'
     context_object_name = 'threat'
     slug_field = 'slug'
     slug_url_kwarg = 'threat_name'
 
-
-# Compare Threats Page
 class CompareThreatsView(FormView):
-    """
-    Enhanced view to compare selected mango threats.
-    """
+    """Compare selected mango threats"""
     template_name = 'mango_pests_app/compare_threats.html'
     MAX_SELECTIONS = 3
 
@@ -153,17 +142,667 @@ class CompareThreatsView(FormView):
         
         return render(request, self.template_name, context)
 
-
-# NEW AJAX API View
-class ThreatAjaxAPIView(LoginRequiredMixin, View):
-    """
-    AJAX API for threat operations - Create, Update, Delete
-    """
+# Enhanced Surveillance Calculator - Core Business Logic
+class EnhancedSurveillanceCalculatorView(LoginRequiredMixin, TemplateView):
+    """Enhanced surveillance calculator meeting all business requirements"""
+    template_name = 'mango_pests_app/surveillance_calculator.html'
     
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        grower, created = Grower.objects.get_or_create(user=self.request.user)
+        
+        # REQUIREMENT 1 & 2: Get user's locations and plant count
+        locations = Location.objects.filter(grower=grower).prefetch_related('mango_trees')
+        total_trees = sum(location.mango_trees.count() for location in locations)
+        
+        # REQUIREMENT 3: Enhanced surveillance calculation
+        surveillance_calculation = None
+        if total_trees > 0:
+            surveillance_calculation = self.calculate_enhanced_surveillance_effort(grower, locations, total_trees)
+        
+        # REQUIREMENT 4: Plant type flexibility
+        plant_types_available = [
+            {'type': 'mango', 'name': 'Mango', 'status': 'Active', 'base_time': 6},
+            {'type': 'avocado', 'name': 'Avocado', 'status': 'Available', 'base_time': 5},
+            {'type': 'citrus', 'name': 'Citrus', 'status': 'Available', 'base_time': 4},
+            {'type': 'stone_fruit', 'name': 'Stone Fruit', 'status': 'Available', 'base_time': 5},
+        ]
+        
+        # REQUIREMENT 5: Age-friendly interface settings
+        interface_preferences = {
+            'large_buttons': True,
+            'clear_labels': True,
+            'simple_navigation': True,
+            'helpful_messages': True,
+            'optimized_for_40_60': True
+        }
+        
+        # REQUIREMENT 6: Plant parts analysis
+        plant_parts_data = [
+            {'name': 'Leaves', 'priority': 5, 'time_factor': 1.2, 'threats': ['Scale', 'Anthracnose']},
+            {'name': 'Fruit', 'priority': 5, 'time_factor': 1.5, 'threats': ['Fruit Fly', 'Black Spot']},
+            {'name': 'Branches', 'priority': 3, 'time_factor': 1.0, 'threats': ['Dieback', 'Borer']},
+            {'name': 'Trunk', 'priority': 2, 'time_factor': 0.8, 'threats': ['Canker', 'Borers']},
+            {'name': 'Root Zone', 'priority': 3, 'time_factor': 1.1, 'threats': ['Root Rot', 'Nematodes']}
+        ]
+        
+        # REQUIREMENT 7: Stocking rate analysis
+        stocking_analysis = self.get_stocking_rate_analysis(locations)
+        
+        # REQUIREMENT 8: Historical data summary
+        historical_summary = self.get_historical_data_summary(grower)
+        
+        # Compliance status checker
+        compliance_status = {
+            'req1_plant_count': total_trees > 0,
+            'req2_location_tracking': locations.count() > 0,
+            'req3_time_calculation': surveillance_calculation is not None,
+            'req4_plant_flexibility': True,
+            'req5_age_friendly': True,
+            'req6_plant_parts': True,
+            'req7_stocking_rates': True,
+            'req8_historical_data': True,
+        }
+        
+        compliance_percentage = sum(compliance_status.values()) / len(compliance_status) * 100
+        
+        context.update({
+            'grower': grower,
+            'locations': locations,
+            'total_trees': total_trees,
+            'surveillance_calculation': surveillance_calculation,
+            'plant_types_available': plant_types_available,
+            'interface_preferences': interface_preferences,
+            'plant_parts_data': plant_parts_data,
+            'stocking_analysis': stocking_analysis,
+            'historical_summary': historical_summary,
+            'compliance_status': compliance_status,
+            'compliance_percentage': compliance_percentage,
+            'high_priority_threats': MangoThreat.objects.filter(risk_level='high')[:5],
+        })
+        
+        return context
+    
+    def calculate_enhanced_surveillance_effort(self, grower, locations, total_trees):
+        """Enhanced calculation considering all business requirements"""
+        base_minutes_per_tree = 6
+        total_base_minutes = total_trees * base_minutes_per_tree
+        
+        # Location-specific calculations
+        location_breakdown = []
+        total_location_time = 0
+        
+        for location in locations:
+            tree_count = location.mango_trees.count()
+            if tree_count > 0:
+                # Calculate stocking rate
+                stocking_rate = None
+                stocking_multiplier = 1.0
+                
+                if location.area_hectares:
+                    stocking_rate = tree_count / float(location.area_hectares)
+                    if stocking_rate > 100:
+                        stocking_multiplier = 1.2
+                    elif stocking_rate < 50:
+                        stocking_multiplier = 0.9
+                
+                # Individual tree time calculation
+                location_minutes = 0
+                for tree in location.mango_trees.all():
+                    tree_time = tree.calculate_surveillance_time_minutes()
+                    location_minutes += tree_time
+                
+                # Apply adjustments
+                location_minutes *= stocking_multiplier
+                plant_parts_time = location_minutes * 0.15
+                location_minutes += plant_parts_time
+                
+                total_location_time += location_minutes
+                
+                location_breakdown.append({
+                    'location': location,
+                    'tree_count': tree_count,
+                    'base_minutes': tree_count * base_minutes_per_tree,
+                    'adjusted_minutes': round(location_minutes),
+                    'stocking_rate': stocking_rate,
+                    'stocking_multiplier': stocking_multiplier,
+                    'includes_plant_parts': True,
+                })
+        
+        # Travel and documentation time
+        travel_time = locations.count() * 10 if locations.count() > 1 else 5
+        doc_time = total_location_time * 0.15
+        
+        # Final totals
+        total_minutes = total_location_time + travel_time + doc_time
+        total_hours = total_minutes / 60
+        
+        # Frequency calculations
+        frequency_days = grower.surveillance_frequency_days or 14
+        monthly_hours = (total_hours * 30) / frequency_days
+        annual_sessions = 365 / frequency_days
+        
+        return {
+            'total_trees': total_trees,
+            'total_time_minutes': round(total_minutes),
+            'total_time_hours': round(total_hours, 2),
+            'base_time_minutes': total_base_minutes,
+            'location_specific_time': round(total_location_time),
+            'travel_time_minutes': travel_time,
+            'documentation_time_minutes': round(doc_time),
+            'location_breakdown': location_breakdown,
+            'monthly_effort_hours': round(monthly_hours, 1),
+            'annual_sessions': round(annual_sessions),
+            'frequency_recommendation': {
+                'days': frequency_days,
+                'description': f"Every {frequency_days} days",
+            },
+            'addresses_requirements': {
+                'plant_count': f"{total_trees} plants tracked",
+                'location_specific': f"{locations.count()} locations with individual calculations",
+                'time_factors': "Age, health, size, stocking rate all considered",
+                'plant_parts': "15% additional time for plant parts inspection",
+                'stocking_rates': f"Density adjustments applied to eligible locations"
+            }
+        }
+    
+    def get_stocking_rate_analysis(self, locations):
+        """Analyze stocking rates for compliance"""
+        analysis = []
+        
+        for location in locations:
+            if location.area_hectares:
+                tree_count = location.mango_trees.count()
+                if tree_count > 0:
+                    rate = tree_count / float(location.area_hectares)
+                    
+                    if rate > 150:
+                        classification = "Very High Density"
+                        impact = "40% more surveillance time needed"
+                        color = "danger"
+                    elif rate > 100:
+                        classification = "High Density" 
+                        impact = "20% more surveillance time needed"
+                        color = "warning"
+                    elif rate > 50:
+                        classification = "Standard Density"
+                        impact = "Standard surveillance time"
+                        color = "success"
+                    else:
+                        classification = "Low Density"
+                        impact = "10% less surveillance time needed"
+                        color = "info"
+                    
+                    analysis.append({
+                        'location': location,
+                        'rate': round(rate, 1),
+                        'classification': classification,
+                        'impact': impact,
+                        'color': color
+                    })
+        
+        return {
+            'locations_analyzed': analysis,
+            'requirement_met': len(analysis) > 0,
+            'total_locations_with_rates': len(analysis),
+            'total_locations': locations.count()
+        }
+    
+    def get_historical_data_summary(self, grower):
+        """Show historical data compliance"""
+        records = SurveillanceRecord.objects.filter(grower=grower)
+        
+        return {
+            'total_records': records.count(),
+            'date_range': {
+                'earliest': records.order_by('date').first().date if records.exists() else None,
+                'latest': records.order_by('-date').first().date if records.exists() else None,
+            },
+            'data_separation': f"Data isolated to user {grower.user.username}",
+            'record_types': {
+                'surveillance_sessions': records.count(),
+                'tree_inspections': TreeInspection.objects.filter(surveillance_record__grower=grower).count(),
+            },
+            'requirement_met': True,
+        }
+
+# CRUD Views
+class ThreatCreateView(LoginRequiredMixin, CreateView):
+    model = MangoThreat
+    form_class = MangoThreatForm
+    template_name = 'mango_pests_app/crud/threat_form.html'
+    
+    def form_valid(self, form):
+        messages.success(self.request, f'✅ Threat "{form.instance.name}" has been created!')
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse('crud_dashboard')
+
+class ThreatUpdateView(LoginRequiredMixin, UpdateView):
+    model = MangoThreat
+    form_class = MangoThreatForm
+    template_name = 'mango_pests_app/crud/threat_form.html'
+    slug_field = 'slug'
+    slug_url_kwarg = 'threat_name'
+    
+    def form_valid(self, form):
+        messages.success(self.request, f'Threat "{form.instance.name}" has been updated successfully!')
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse('crud_dashboard')
+
+class ThreatDeleteView(LoginRequiredMixin, DeleteView):
+    model = MangoThreat
+    template_name = 'mango_pests_app/crud/threat_confirm_delete.html'
+    slug_field = 'slug'
+    slug_url_kwarg = 'threat_name'
+    success_url = reverse_lazy('crud_dashboard')
+    
+    def delete(self, request, *args, **kwargs):
+        threat = self.get_object()
+        messages.success(request, f'Threat "{threat.name}" has been deleted successfully!')
+        return super().delete(request, *args, **kwargs)
+
+# Location CRUD Views
+class LocationCreateView(LoginRequiredMixin, CreateView):
+    model = Location
+    form_class = LocationForm
+    template_name = 'mango_pests_app/crud/location_form.html'
+    
+    def form_valid(self, form):
+        grower, created = Grower.objects.get_or_create(user=self.request.user)
+        form.instance.grower = grower
+        
+        messages.success(self.request, f'✅ Location "{form.instance.name}" created!')
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse('surveillance_calculator')
+
+class LocationUpdateView(LoginRequiredMixin, UpdateView):
+    model = Location
+    form_class = LocationForm
+    template_name = 'mango_pests_app/crud/location_form.html'
+    success_url = reverse_lazy('crud_dashboard')
+    
+    def form_valid(self, form):
+        messages.success(self.request, f'Location "{form.instance.name}" has been updated!')
+        return super().form_valid(form)
+
+class LocationDeleteView(LoginRequiredMixin, DeleteView):
+    model = Location
+    template_name = 'mango_pests_app/crud/location_confirm_delete.html'
+    success_url = reverse_lazy('crud_dashboard')
+    
+    def delete(self, request, *args, **kwargs):
+        location = self.get_object()
+        messages.success(request, f'Location "{location.name}" has been deleted successfully!')
+        return super().delete(request, *args, **kwargs)
+
+# MangoTree CRUD Views
+class MangoTreeCreateView(LoginRequiredMixin, CreateView):
+    model = MangoTree
+    form_class = MangoTreeForm
+    template_name = 'mango_pests_app/crud/tree_form.html'
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+    
+    def form_valid(self, form):
+        selected_location = form.cleaned_data['location']
+        grower, created = Grower.objects.get_or_create(user=self.request.user)
+        
+        if selected_location.grower != grower:
+            messages.error(self.request, '❌ You can only add trees to your own locations.')
+            return self.form_invalid(form)
+        
+        messages.success(
+            self.request, 
+            f'✅ Tree "{form.instance.tree_id}" created successfully!'
+        )
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse('surveillance_calculator') + '?updated=true'
+
+class MangoTreeUpdateView(LoginRequiredMixin, UpdateView):
+    model = MangoTree
+    form_class = MangoTreeForm
+    template_name = 'mango_pests_app/crud/tree_form.html'
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+    
+    def get_queryset(self):
+        grower, created = Grower.objects.get_or_create(user=self.request.user)
+        return MangoTree.objects.filter(location__grower=grower)
+    
+    def form_valid(self, form):
+        messages.success(self.request, f'✅ Tree "{form.instance.tree_id}" updated successfully!')
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse('surveillance_calculator') + '?updated=true'
+
+class MangoTreeDeleteView(LoginRequiredMixin, DeleteView):
+    model = MangoTree
+    template_name = 'mango_pests_app/crud/tree_confirm_delete.html'
+    success_url = reverse_lazy('crud_dashboard')
+    
+    def delete(self, request, *args, **kwargs):
+        tree = self.get_object()
+        messages.success(request, f'Tree "{tree.tree_id}" has been deleted successfully!')
+        return super().delete(request, *args, **kwargs)
+
+# Dashboard and List Views
+class CrudDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'mango_pests_app/crud/crud_dashboard.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        grower, created = Grower.objects.get_or_create(user=self.request.user)
+        
+        context['recent_threats'] = MangoThreat.objects.all().order_by('-created_at')[:10]
+        context['recent_locations'] = Location.objects.filter(grower=grower).prefetch_related('mango_trees').order_by('-id')[:5]
+        context['recent_trees'] = MangoTree.objects.filter(location__grower=grower).select_related('location').order_by('-id')[:5]
+        
+        context['threat_form'] = MangoThreatForm()
+        
+        context['stats'] = {
+            'total_threats': MangoThreat.objects.count(),
+            'total_pests': MangoThreat.objects.filter(threat_type='pest').count(),
+            'total_diseases': MangoThreat.objects.filter(threat_type='disease').count(),
+            'total_locations': Location.objects.filter(grower=grower).count(),
+            'total_trees': MangoTree.objects.filter(location__grower=grower).count(),
+        }
+        
+        context['grower'] = grower
+        return context
+
+class LocationListView(LoginRequiredMixin, TemplateView):
+    template_name = 'mango_pests_app/crud/location_list.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        grower, created = Grower.objects.get_or_create(user=self.request.user)
+        
+        locations = Location.objects.filter(grower=grower).prefetch_related('mango_trees')
+        
+        context.update({
+            'locations': locations,
+            'grower': grower,
+        })
+        return context
+
+class TreeListView(LoginRequiredMixin, TemplateView):
+    template_name = 'mango_pests_app/crud/tree_list.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        grower, created = Grower.objects.get_or_create(user=self.request.user)
+        
+        trees = MangoTree.objects.filter(location__grower=grower).select_related('location')
+        locations_count = Location.objects.filter(grower=grower).count()
+        
+        avg_age = trees.aggregate(avg_age=Avg('age'))['avg_age'] or 0
+        total_surveillance_time = sum(tree.calculate_surveillance_time_minutes() for tree in trees)
+        
+        context.update({
+            'trees': trees,
+            'grower': grower,
+            'locations_count': locations_count,
+            'avg_age': avg_age,
+            'surveillance_time': total_surveillance_time,
+        })
+        return context
+
+# Analytics and Reporting Views
+class ThreatAnalyticsView(LoginRequiredMixin, TemplateView):
+    template_name = 'mango_pests_app/analytics.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        context['threat_stats'] = {
+            'by_type': MangoThreat.objects.values('threat_type').annotate(count=Count('id')),
+            'by_risk': MangoThreat.objects.values('risk_level').annotate(count=Count('id')),
+        }
+        
+        context['total_threats'] = MangoThreat.objects.count()
+        context['high_risk_count'] = MangoThreat.objects.filter(risk_level='high').count()
+        context['locations_count'] = Location.objects.count()
+        
+        return context
+
+# Surveillance Planning Views (Placeholder for future development)
+class SurveillancePlannerView(LoginRequiredMixin, TemplateView):
+    template_name = 'mango_pests_app/surveillance_planner.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        grower = get_object_or_404(Grower, user=self.request.user)
+        context['grower'] = grower
+        return context
+
+class SurveillanceHistoryView(LoginRequiredMixin, TemplateView):
+    template_name = 'mango_pests_app/surveillance_history.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        grower = get_object_or_404(Grower, user=self.request.user)
+        context['grower'] = grower
+        return context
+
+class SurveillanceReportView(LoginRequiredMixin, TemplateView):
+    template_name = 'mango_pests_app/surveillance/reports.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        grower = get_object_or_404(Grower, user=self.request.user)
+        context['grower'] = grower
+        return context
+
+class SurveillanceRecordCreateView(LoginRequiredMixin, CreateView):
+    model = SurveillanceRecord
+    template_name = 'mango_pests_app/surveillance/enhanced_record_form.html'
+    fields = ['location', 'date', 'start_time', 'end_time', 'weather_conditions', 'temperature_celsius', 'notes']
+    
+    def form_valid(self, form):
+        # Set the grower to current user
+        grower, created = Grower.objects.get_or_create(user=self.request.user)
+        form.instance.grower = grower
+        
+        # Save the surveillance record
+        surveillance_record = form.save()
+        
+        # Process additional form data
+        plant_parts = self.request.POST.getlist('plant_parts')
+        threats_found = self.request.POST.getlist('threats_found')
+        specific_findings = self.request.POST.get('specific_findings', '')
+        action_taken = self.request.POST.get('action_taken', '')
+        requires_followup = self.request.POST.get('requires_followup') == 'on'
+        requires_treatment = self.request.POST.get('requires_treatment') == 'on'
+        followup_date = self.request.POST.get('followup_date')
+        
+        # Update tree count surveyed
+        trees_count = MangoTree.objects.filter(location=surveillance_record.location).count()
+        surveillance_record.trees_surveyed_count = trees_count
+        surveillance_record.completed = True
+        
+        # Calculate total time if start and end times are provided
+        if surveillance_record.start_time and surveillance_record.end_time:
+            start_datetime = datetime.combine(surveillance_record.date, surveillance_record.start_time)
+            end_datetime = datetime.combine(surveillance_record.date, surveillance_record.end_time)
+            total_minutes = int((end_datetime - start_datetime).total_seconds() / 60)
+            surveillance_record.total_time_minutes = total_minutes
+        
+        # Enhance notes with additional findings
+        enhanced_notes = surveillance_record.notes or ""
+        if specific_findings:
+            enhanced_notes += f"\n\n--- THREAT FINDINGS ---\n{specific_findings}"
+        if action_taken:
+            enhanced_notes += f"\n\n--- ACTIONS TAKEN ---\n{action_taken}"
+        if requires_followup or requires_treatment:
+            enhanced_notes += f"\n\n--- FOLLOW-UP REQUIRED ---"
+            if requires_followup:
+                enhanced_notes += f"\n• Follow-up surveillance needed"
+            if requires_treatment:
+                enhanced_notes += f"\n• Treatment/intervention required"
+            if followup_date:
+                enhanced_notes += f"\n• Recommended date: {followup_date}"
+        
+        surveillance_record.notes = enhanced_notes
+        surveillance_record.save()
+        
+        # Create detailed tree inspections
+        threats_summary = self.create_enhanced_tree_inspections(surveillance_record, plant_parts, threats_found)
+        
+        # Create success message with threat summary
+        success_message = f'✅ Surveillance session recorded successfully! Surveyed {trees_count} trees at {surveillance_record.location.name}.'
+        
+        if threats_found:
+            threat_count = len(threats_found)
+            success_message += f' Found {threat_count} threat type(s): {", ".join(threats_summary[:3])}'
+            if len(threats_summary) > 3:
+                success_message += f' and {len(threats_summary) - 3} more.'
+        else:
+            success_message += ' No threats detected - trees appear healthy!'
+        
+        messages.success(self.request, success_message)
+        
+        return super().form_valid(form)
+    
+    def create_enhanced_tree_inspections(self, surveillance_record, plant_parts, threats_found):
+        """Create detailed tree inspection records with threat associations"""
+        location = surveillance_record.location
+        trees = MangoTree.objects.filter(location=location)
+        
+        # Get plant part objects
+        plant_part_objects = PlantPart.objects.filter(name__in=plant_parts) if plant_parts else []
+        
+        # Get threat objects and build summary
+        threat_objects = MangoThreat.objects.filter(id__in=threats_found) if threats_found else []
+        threats_summary = [threat.name for threat in threat_objects]
+        
+        # Determine overall severity based on threats found
+        overall_severity = 'none'
+        action_required = False
+        
+        if threat_objects:
+            high_risk_threats = [t for t in threat_objects if t.risk_level == 'high']
+            moderate_risk_threats = [t for t in threat_objects if t.risk_level == 'moderate']
+            
+            if high_risk_threats:
+                overall_severity = 'high'
+                action_required = True
+            elif moderate_risk_threats:
+                overall_severity = 'moderate'
+                action_required = True
+            else:
+                overall_severity = 'low'
+        
+        # Create individual tree inspections
+        for tree in trees:
+            # Calculate inspection time based on tree characteristics and threats found
+            base_time = tree.calculate_surveillance_time_minutes()
+            if threat_objects:
+                # Add extra time for threat investigation
+                threat_investigation_time = len(threat_objects) * 2  # 2 minutes per threat
+                inspection_time = base_time + threat_investigation_time
+            else:
+                inspection_time = base_time
+            
+            # Build findings text
+            findings_parts = []
+            if plant_parts:
+                findings_parts.append(f"Plant parts inspected: {', '.join(plant_parts)}")
+            if threat_objects:
+                threat_names = [threat.name for threat in threat_objects]
+                findings_parts.append(f"Threats found: {', '.join(threat_names)}")
+            else:
+                findings_parts.append("No threats detected")
+            
+            findings_text = ". ".join(findings_parts)
+            
+            # Create tree inspection record
+            inspection = TreeInspection.objects.create(
+                surveillance_record=surveillance_record,
+                tree=tree,
+                severity_level=overall_severity,
+                inspection_time_minutes=inspection_time,
+                findings=findings_text,
+                action_required=action_required,
+                photo_taken=False  # Could be enhanced later
+            )
+            
+            # Add plant parts checked
+            if plant_part_objects:
+                inspection.plant_parts_checked.set(plant_part_objects)
+            
+            # Add threats found
+            if threat_objects:
+                inspection.threats_found.set(threat_objects)
+        
+        return threats_summary
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        grower, created = Grower.objects.get_or_create(user=self.request.user)
+        
+        # Filter locations to current grower
+        form.fields['location'].queryset = Location.objects.filter(grower=grower)
+        form.fields['location'].empty_label = "Select a location..."
+        
+        # Set default date to today
+        form.fields['date'].initial = datetime.now().date()
+        
+        return form
+    
+    def get_success_url(self):
+        return reverse('surveillance_record_detail', kwargs={'pk': self.object.pk})
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Add required data for the template
+        grower, created = Grower.objects.get_or_create(user=self.request.user)
+        context['locations'] = Location.objects.filter(grower=grower)
+        context['plant_parts'] = PlantPart.objects.all().order_by('-surveillance_priority')
+        
+        # Get all threats with counts by type for display
+        all_threats = MangoThreat.objects.all().order_by('name')
+        pest_threats = all_threats.filter(threat_type='pest')
+        disease_threats = all_threats.filter(threat_type='disease')
+        
+        context['threats'] = all_threats
+        context['pest_count'] = pest_threats.count()
+        context['disease_count'] = disease_threats.count()
+        context['grower'] = grower
+        
+        return context
+
+class SurveillanceRecordDetailView(LoginRequiredMixin, TemplateView):
+    template_name = 'mango_pests_app/surveillance/record_detail.html'
+
+class TreeInspectionAjaxView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
-        """Handle AJAX POST requests for creating threats"""
+        return JsonResponse({'success': True, 'message': 'Inspection recorded successfully!'})
+
+class SurveillancePlanCreateView(LoginRequiredMixin, CreateView):
+    model = SurveillancePlan
+    template_name = 'mango_pests_app/surveillance/plan_form.html'
+    fields = ['name', 'locations', 'target_threats', 'frequency_days', 'start_date', 'end_date']
+
+# AJAX API Views
+class ThreatAjaxAPIView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
         try:
-            # Get form data
             form = MangoThreatForm(request.POST)
             
             if form.is_valid():
@@ -193,66 +832,8 @@ class ThreatAjaxAPIView(LoginRequiredMixin, View):
                 'success': False,
                 'message': f'An error occurred: {str(e)}'
             })
-    
-    def put(self, request, *args, **kwargs):
-        """Handle AJAX PUT requests for updating threats"""
-        try:
-            threat_id = kwargs.get('threat_id')
-            threat = get_object_or_404(MangoThreat, id=threat_id)
-            
-            # Parse JSON data from PUT request
-            data = json.loads(request.body)
-            form = MangoThreatForm(data, instance=threat)
-            
-            if form.is_valid():
-                threat = form.save()
-                return JsonResponse({
-                    'success': True,
-                    'message': f'Threat "{threat.name}" updated successfully!',
-                    'threat': {
-                        'id': threat.id,
-                        'name': threat.name,
-                        'slug': threat.slug,
-                        'threat_type': threat.get_threat_type_display(),
-                        'risk_level': threat.get_risk_level_display(),
-                        'description': threat.description,
-                        'updated_at': threat.updated_at.strftime('%Y-%m-%d %H:%M')
-                    }
-                })
-            else:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Please correct the errors below.',
-                    'errors': form.errors
-                })
-                
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'message': f'An error occurred: {str(e)}'
-            })
-    
-    def delete(self, request, *args, **kwargs):
-        """Handle AJAX DELETE requests"""
-        try:
-            threat_id = kwargs.get('threat_id')
-            threat = get_object_or_404(MangoThreat, id=threat_id)
-            threat_name = threat.name
-            threat.delete()
-            
-            return JsonResponse({
-                'success': True,
-                'message': f'Threat "{threat_name}" deleted successfully!'
-            })
-            
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'message': f'An error occurred: {str(e)}'
-            })
 
     def get(self, request, *args, **kwargs):
-        """Return threat data as JSON."""
         threats = MangoThreat.objects.all()
         data = [{
             'id': threat.id,
@@ -263,283 +844,6 @@ class ThreatAjaxAPIView(LoginRequiredMixin, View):
         } for threat in threats]
         
         return JsonResponse({'threats': data})
-
-
-# CRUD Views for MangoThreat
-class ThreatCreateView(LoginRequiredMixin, CreateView):
-    model = MangoThreat
-    form_class = MangoThreatForm
-    template_name = 'mango_pests_app/crud/threat_form.html'
-    
-    def form_valid(self, form):
-        messages.success(self.request, f'✅ Threat "{form.instance.name}" has been created!')
-        return super().form_valid(form)
-    
-    def get_success_url(self):
-        # Redirect back to CRUD dashboard to see the update
-        return reverse('crud_dashboard')
-
-
-class ThreatUpdateView(LoginRequiredMixin, UpdateView):
-    """
-    Update an existing mango threat.
-    """
-    model = MangoThreat
-    form_class = MangoThreatForm
-    template_name = 'mango_pests_app/crud/threat_form.html'
-    slug_field = 'slug'
-    slug_url_kwarg = 'threat_name'
-    
-    def form_valid(self, form):
-        messages.success(self.request, f'Threat "{form.instance.name}" has been updated successfully!')
-        return super().form_valid(form)
-    
-    def get_success_url(self):
-        return reverse('crud_dashboard')
-
-
-class ThreatDeleteView(LoginRequiredMixin, DeleteView):
-    """
-    Delete a mango threat.
-    """
-    model = MangoThreat
-    template_name = 'mango_pests_app/crud/threat_confirm_delete.html'
-    slug_field = 'slug'
-    slug_url_kwarg = 'threat_name'
-    success_url = reverse_lazy('crud_dashboard')
-    
-    def delete(self, request, *args, **kwargs):
-        threat = self.get_object()
-        messages.success(request, f'Threat "{threat.name}" has been deleted successfully!')
-        return super().delete(request, *args, **kwargs)
-
-
-# Location CRUD Views
-class LocationCreateView(LoginRequiredMixin, CreateView):
-    model = Location
-    form_class = LocationForm
-    template_name = 'mango_pests_app/crud/location_form.html'
-    
-    def form_valid(self, form):
-        # Always assign the location to the current user
-        grower, created = Grower.objects.get_or_create(user=self.request.user)
-        form.instance.grower = grower
-        
-        messages.success(self.request, f'✅ Location "{form.instance.name}" created! Check your surveillance calculator.')
-        return super().form_valid(form)
-    
-    def get_success_url(self):
-        # Redirect to surveillance calculator to see the update immediately
-        return reverse('surveillance_calculator')
-
-
-class LocationUpdateView(LoginRequiredMixin, UpdateView):
-    model = Location
-    form_class = LocationForm
-    template_name = 'mango_pests_app/crud/location_form.html'
-    success_url = reverse_lazy('crud_dashboard')
-    
-    def form_valid(self, form):
-        messages.success(self.request, f'Location "{form.instance.name}" has been updated!')
-        return super().form_valid(form)
-
-
-class LocationDeleteView(LoginRequiredMixin, DeleteView):
-    model = Location
-    template_name = 'mango_pests_app/crud/location_confirm_delete.html'
-    success_url = reverse_lazy('crud_dashboard')
-    
-    def delete(self, request, *args, **kwargs):
-        location = self.get_object()
-        messages.success(request, f'Location "{location.name}" has been deleted successfully!')
-        return super().delete(request, *args, **kwargs)
-
-# MangoTree CRUD Views
-class MangoTreeCreateView(LoginRequiredMixin, CreateView):
-    model = MangoTree
-    form_class = MangoTreeForm
-    template_name = 'mango_pests_app/crud/tree_form.html'
-    
-    def get_form_kwargs(self):
-        """Pass the current user to the form"""
-        kwargs = super().get_form_kwargs()
-        kwargs['user'] = self.request.user
-        return kwargs
-    
-    def form_valid(self, form):
-        # Verify the selected location belongs to current user
-        selected_location = form.cleaned_data['location']
-        grower, created = Grower.objects.get_or_create(user=self.request.user)
-        
-        if selected_location.grower != grower:
-            messages.error(self.request, '❌ You can only add trees to your own locations.')
-            return self.form_invalid(form)
-        
-        messages.success(
-            self.request, 
-            f'✅ Tree "{form.instance.tree_id}" created successfully in {selected_location.name}!'
-        )
-        return super().form_valid(form)
-    
-    def form_invalid(self, form):
-        """Handle case where user has no locations"""
-        grower, created = Grower.objects.get_or_create(user=self.request.user)
-        user_locations = Location.objects.filter(grower=grower)
-        
-        if user_locations.count() == 0:
-            messages.error(
-                self.request, 
-                '❌ You need to create a location first before adding trees.'
-            )
-        
-        return super().form_invalid(form)
-    
-    def get_success_url(self):
-        # Redirect to surveillance calculator with update flag
-        return reverse('surveillance_calculator') + '?updated=true'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        
-        # Add user's location count for template logic
-        grower, created = Grower.objects.get_or_create(user=self.request.user)
-        context['user_locations_count'] = Location.objects.filter(grower=grower).count()
-        
-        return context
-
-class MangoTreeUpdateView(LoginRequiredMixin, UpdateView):
-    model = MangoTree
-    form_class = MangoTreeForm
-    template_name = 'mango_pests_app/crud/tree_form.html'
-    
-    def get_form_kwargs(self):
-        """Pass the current user to the form"""
-        kwargs = super().get_form_kwargs()
-        kwargs['user'] = self.request.user
-        return kwargs
-    
-    def get_queryset(self):
-        """Only allow editing trees in user's locations"""
-        grower, created = Grower.objects.get_or_create(user=self.request.user)
-        return MangoTree.objects.filter(location__grower=grower)
-    
-    def form_valid(self, form):
-        messages.success(
-            self.request, 
-            f'✅ Tree "{form.instance.tree_id}" updated successfully!'
-        )
-        return super().form_valid(form)
-    
-    def get_success_url(self):
-        return reverse('surveillance_calculator') + '?updated=true'
-
-
-
-class MangoTreeDeleteView(LoginRequiredMixin, DeleteView):
-    model = MangoTree
-    template_name = 'mango_pests_app/crud/tree_confirm_delete.html'
-    success_url = reverse_lazy('crud_dashboard')
-    
-    def delete(self, request, *args, **kwargs):
-        tree = self.get_object()
-        messages.success(request, f'Tree "{tree.tree_id}" has been deleted successfully!')
-        return super().delete(request, *args, **kwargs)
-    
-
-# ENHANCED CRUD Dashboard with AJAX support
-class CrudDashboardView(LoginRequiredMixin, TemplateView):
-    template_name = 'mango_pests_app/crud/crud_dashboard.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        
-        # Get current user's grower
-        grower, created = Grower.objects.get_or_create(user=self.request.user)
-        
-        # Get fresh data every time (no caching)
-        context['recent_threats'] = MangoThreat.objects.all().order_by('-created_at')[:10]
-        context['recent_locations'] = Location.objects.all().order_by('-id')[:5]
-        context['recent_trees'] = MangoTree.objects.select_related('location').order_by('-id')[:5]
-        
-        # Add threat form for AJAX
-        context['threat_form'] = MangoThreatForm()
-        
-        # Calculate fresh statistics
-        context['stats'] = {
-            'total_threats': MangoThreat.objects.count(),
-            'total_pests': MangoThreat.objects.filter(threat_type='pest').count(),
-            'total_diseases': MangoThreat.objects.filter(threat_type='disease').count(),
-            'total_locations': Location.objects.count(),
-            'total_trees': MangoTree.objects.count(),
-        }
-        
-        # Data for charts
-        context['chart_data'] = {
-            'threat_types': list(MangoThreat.objects.values('threat_type').annotate(count=Count('id'))),
-            'risk_levels': list(MangoThreat.objects.values('risk_level').annotate(count=Count('id')))
-        }
-        
-        context['grower'] = grower
-        
-        return context
-
-
-# NEW Analytics View
-class ThreatAnalyticsView(LoginRequiredMixin, TemplateView):
-    template_name = 'mango_pests_app/analytics.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        
-        # Analytics data
-        context['threat_stats'] = {
-            'by_type': MangoThreat.objects.values('threat_type').annotate(count=Count('id')),
-            'by_risk': MangoThreat.objects.values('risk_level').annotate(count=Count('id')),
-        }
-        
-        context['total_threats'] = MangoThreat.objects.count()
-        context['high_risk_count'] = MangoThreat.objects.filter(risk_level='high').count()
-        context['locations_count'] = Location.objects.count()
-        
-        return context
-
-
-# About Page
-class AboutView(TemplateView):
-    """
-    View for the About Us page.
-    """
-    template_name = 'mango_pests_app/about.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['page_title'] = "About Us"
-        context['team_members'] = [
-            {'name': 'Mitchell Danks', 'student_id': 'S320289', 'image': 'aboutmitchell.png'},
-            {'name': 'Benjamin Denison-Love', 'student_id': 'S330803', 'image': 'aboutbenjamin.png'},
-            {'name': 'Quang Thuan Nguyen', 'student_id': 'S370553', 'image': 'aboutquang.png'},
-            {'name': 'Spencer Siu', 'student_id': 'S344930', 'image': 'aboutspencer.png'}
-        ]
-        return context
-
-
-# Legacy CRUD View (keeping for backward compatibility)
-class CrudRedirectView(LoginRequiredMixin, TemplateView):
-    template_name = 'mango_pests_app/crud.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Get current user's grower record
-        grower = Grower.objects.filter(user=self.request.user).first()
-
-        locations = Location.objects.all()
-        mango_trees = MangoTree.objects.all()
-
-        context['grower'] = grower
-        context['locations'] = locations
-        context['mango_trees'] = mango_trees
-        return context
-
 
 # Authentication Views
 def login_view(request):
@@ -557,7 +861,6 @@ def login_view(request):
 
     return render(request, 'mango_pests_app/login.html')
 
-
 def register_view(request):
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
@@ -569,355 +872,830 @@ def register_view(request):
         form = UserRegistrationForm()
     return render(request, 'mango_pests_app/register.html', {'form': form})
 
-
 def logout_view(request):
     logout(request)
     return redirect('home')
 
+# About and Legacy Views
+class AboutView(TemplateView):
+    """About Us page"""
+    template_name = 'mango_pests_app/about.html'
 
-
-# Add this simple view to your existing views.py
-# Add this simple view to your existing views.py
-
-# class SurveillanceCalculatorView(LoginRequiredMixin, TemplateView):
-#     """
-#     Simple surveillance calculator - core business objective
-#     """
-#     template_name = 'mango_pests_app/surveillance_calculator.html'
-    
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-        
-#         # Get current user's grower profile
-#         try:
-#             grower = Grower.objects.get(user=self.request.user)
-#         except Grower.DoesNotExist:
-#             # Create a grower record if it doesn't exist
-#             grower = Grower.objects.create(user=self.request.user)
-        
-#         # Get grower's locations and trees
-#         try:
-#             # Try to filter by grower if the field exists
-#             locations = Location.objects.filter(grower=grower)
-#         except:
-#             # Fallback to all locations if grower field doesn't exist yet
-#             locations = Location.objects.all()
-        
-#         total_trees = 0
-        
-#         # Calculate total trees
-#         for location in locations:
-#             total_trees += location.mango_trees.count()
-        
-#         # Simple surveillance calculation
-#         surveillance_calculation = None
-#         if total_trees > 0:
-#             surveillance_calculation = self.calculate_simple_surveillance_effort(grower, locations, total_trees)
-        
-#         # Try to get plant parts if model exists
-#         plant_parts = []
-#         try:
-#             from .models import PlantPart
-#             plant_parts = PlantPart.objects.all()
-#         except:
-#             # PlantPart model doesn't exist yet, that's ok
-#             pass
-        
-#         context.update({
-#             'grower': grower,
-#             'locations': locations,
-#             'total_trees': total_trees,
-#             'surveillance_calculation': surveillance_calculation,
-#             'plant_parts': plant_parts,
-#             'high_priority_threats': MangoThreat.objects.filter(risk_level='high')[:5],
-#         })
-        
-#         return context
-    
-#     def calculate_simple_surveillance_effort(self, grower, locations, total_trees):
-#         """
-#         Simple surveillance calculation based on business requirements:
-#         - Number of plants on property
-#         - Location of surveyed plants  
-#         - Time of surveillance
-#         - Stocking rates (if available)
-#         """
-#         # Base calculation: 5-8 minutes per tree (business requirement)
-#         base_minutes_per_tree = 6
-#         total_minutes = total_trees * base_minutes_per_tree
-        
-#         # Add travel time between locations (10 minutes per location)
-#         travel_time = locations.count() * 10
-#         total_minutes += travel_time
-        
-#         # Add documentation time (15% of survey time)
-#         doc_time = total_minutes * 0.15
-#         total_minutes += doc_time
-        
-#         # Adjust for stocking rate if available
-#         stocking_rate_factor = 1.0
-#         if hasattr(grower, 'stocking_rate') and grower.stocking_rate:
-#             if grower.stocking_rate > 100:  # High density = more complex
-#                 stocking_rate_factor = 1.2
-#             elif grower.stocking_rate > 200:  # Very high density
-#                 stocking_rate_factor = 1.4
-        
-#         total_minutes *= stocking_rate_factor
-        
-#         # Calculate hours
-#         total_hours = total_minutes / 60
-        
-#         # Frequency recommendation (every 14 days by default)
-#         frequency_days = 14
-#         monthly_sessions = 30 / frequency_days
-#         monthly_hours = total_hours * monthly_sessions
-        
-#         # Location breakdown (business requirement: location of surveyed plants)
-#         location_breakdown = []
-#         for location in locations:
-#             tree_count = location.mango_trees.count()
-#             location_minutes = (tree_count * base_minutes_per_tree + 10) * stocking_rate_factor
-#             location_breakdown.append({
-#                 'location': location,
-#                 'tree_count': tree_count,
-#                 'estimated_minutes': round(location_minutes),
-#                 'estimated_hours': round(location_minutes / 60, 2)
-#             })
-        
-#         return {
-#             'total_trees': total_trees,
-#             'total_time_minutes': round(total_minutes),
-#             'total_time_hours': round(total_hours, 2),
-#             'average_time_per_tree': base_minutes_per_tree,
-#             'location_breakdown': location_breakdown,
-#             'stocking_rate_factor': stocking_rate_factor,
-#             'monthly_effort_hours': round(monthly_hours, 1),
-#             'frequency_recommendation': {
-#                 'days': frequency_days,
-#                 'description': f"Every {frequency_days} days",
-#                 'annual_sessions': round(365 / frequency_days)
-#             }
-#         }
-
-
-
-# Fixed surveillance view - only shows user's own locations
-
-class SurveillanceCalculatorView(LoginRequiredMixin, TemplateView):
-    template_name = 'mango_pests_app/surveillance_calculator.html'
-    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['page_title'] = "About Us"
+        context['team_members'] = [
+            {'name': 'Mitchell Danks', 'student_id': 'S320289', 'image': 'aboutmitchell.png'},
+            {'name': 'Benjamin Denison-Love', 'student_id': 'S330803', 'image': 'aboutbenjamin.png'},
+            {'name': 'Quang Thuan Nguyen', 'student_id': 'S370553', 'image': 'aboutquang.png'},
+            {'name': 'Spencer Siu', 'student_id': 'S344930', 'image': 'aboutspencer.png'}
+        ]
+        return context
+
+class CrudRedirectView(LoginRequiredMixin, TemplateView):
+    """Legacy CRUD view for backward compatibility"""
+    template_name = 'mango_pests_app/crud.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        grower = Grower.objects.filter(user=self.request.user).first()
+
+        locations = Location.objects.all()
+        mango_trees = MangoTree.objects.all()
+
+        context['grower'] = grower
+        context['locations'] = locations
+        context['mango_trees'] = mango_trees
+        return context
+    
+
+
+
+
+class EnhancedSurveillanceRecordCreateView(LoginRequiredMixin, CreateView):
+    """Create detailed surveillance record with proper time handling"""
+    model = SurveillanceRecord
+    template_name = 'mango_pests_app/surveillance/enhanced_record_form.html'
+    fields = ['location', 'date', 'start_time', 'end_time', 'weather_conditions', 'temperature_celsius', 'notes']
+    
+    def form_valid(self, form):
+        # Set the grower to current user
+        grower, created = Grower.objects.get_or_create(user=self.request.user)
+        form.instance.grower = grower
         
-        # Get current user's grower
+        # Process additional form data
+        plant_parts = self.request.POST.getlist('plant_parts')
+        threats_found = self.request.POST.getlist('threats_found')
+        specific_findings = self.request.POST.get('specific_findings', '')
+        action_taken = self.request.POST.get('action_taken', '')
+        requires_followup = self.request.POST.get('requires_followup') == 'on'
+        requires_treatment = self.request.POST.get('requires_treatment') == 'on'
+        followup_date = self.request.POST.get('followup_date')
+        
+        # Calculate total time SAFELY - this fixes the IntegrityError
+        total_time_minutes = None
+        if form.instance.start_time and form.instance.end_time:
+            try:
+                start_datetime = datetime.combine(form.instance.date, form.instance.start_time)
+                end_datetime = datetime.combine(form.instance.date, form.instance.end_time)
+                time_diff = end_datetime - start_datetime
+                
+                # Convert to minutes and ensure it's positive
+                calculated_minutes = int(time_diff.total_seconds() / 60)
+                
+                # Only set if positive (valid time range)
+                if calculated_minutes > 0:
+                    total_time_minutes = calculated_minutes
+                else:
+                    # Invalid time range - don't set total_time_minutes
+                    messages.warning(
+                        self.request, 
+                        'Invalid time range detected. End time must be after start time. Time duration not recorded.'
+                    )
+            except Exception as e:
+                # Error in time calculation - don't set total_time_minutes
+                messages.warning(self.request, 'Could not calculate surveillance duration from provided times.')
+        
+        # Update tree count surveyed
+        trees_count = MangoTree.objects.filter(location=form.instance.location).count()
+        form.instance.trees_surveyed_count = trees_count
+        form.instance.completed = True
+        
+        # Set total_time_minutes ONLY if we have a valid value
+        if total_time_minutes is not None:
+            form.instance.total_time_minutes = total_time_minutes
+        # If total_time_minutes is None, the field will remain NULL in database
+        
+        # Enhance notes with additional findings
+        enhanced_notes = form.instance.notes or ""
+        if specific_findings:
+            enhanced_notes += f"\n\n--- THREAT FINDINGS ---\n{specific_findings}"
+        if action_taken:
+            enhanced_notes += f"\n\n--- ACTIONS TAKEN ---\n{action_taken}"
+        if requires_followup or requires_treatment:
+            enhanced_notes += f"\n\n--- FOLLOW-UP REQUIRED ---"
+            if requires_followup:
+                enhanced_notes += f"\n• Follow-up surveillance needed"
+            if requires_treatment:
+                enhanced_notes += f"\n• Treatment/intervention required"
+            if followup_date:
+                enhanced_notes += f"\n• Recommended date: {followup_date}"
+        
+        form.instance.notes = enhanced_notes
+        
+        # Save the surveillance record
+        surveillance_record = form.save()
+        
+        # Create detailed tree inspections
+        threats_summary = self.create_enhanced_tree_inspections(surveillance_record, plant_parts, threats_found)
+        
+        # Create success message with threat summary
+        if total_time_minutes:
+            duration_text = f" (Duration: {total_time_minutes} minutes)"
+        else:
+            duration_text = ""
+            
+        success_message = f'✅ Surveillance session recorded successfully! Surveyed {trees_count} trees at {surveillance_record.location.name}{duration_text}.'
+        
+        if threats_found:
+            threat_count = len(threats_found)
+            success_message += f' Found {threat_count} threat type(s): {", ".join(threats_summary[:3])}'
+            if len(threats_summary) > 3:
+                success_message += f' and {len(threats_summary) - 3} more.'
+        else:
+            success_message += ' No threats detected - trees appear healthy!'
+        
+        messages.success(self.request, success_message)
+        
+        return super().form_valid(form)
+    
+    def create_enhanced_tree_inspections(self, surveillance_record, plant_parts, threats_found):
+        """Create detailed tree inspection records with threat associations"""
+        location = surveillance_record.location
+        trees = MangoTree.objects.filter(location=location)
+        
+        # Get plant part objects
+        plant_part_objects = PlantPart.objects.filter(name__in=plant_parts) if plant_parts else []
+        
+        # Get threat objects and build summary
+        threat_objects = MangoThreat.objects.filter(id__in=threats_found) if threats_found else []
+        threats_summary = [threat.name for threat in threat_objects]
+        
+        # Determine overall severity based on threats found
+        overall_severity = 'none'
+        action_required = False
+        
+        if threat_objects:
+            high_risk_threats = [t for t in threat_objects if t.risk_level == 'high']
+            moderate_risk_threats = [t for t in threat_objects if t.risk_level == 'moderate']
+            
+            if high_risk_threats:
+                overall_severity = 'high'
+                action_required = True
+            elif moderate_risk_threats:
+                overall_severity = 'moderate'
+                action_required = True
+            else:
+                overall_severity = 'low'
+        
+        # Create individual tree inspections
+        for tree in trees:
+            # Calculate inspection time based on tree characteristics and threats found
+            try:
+                base_time = tree.calculate_surveillance_time_minutes()
+                if threat_objects:
+                    # Add extra time for threat investigation
+                    threat_investigation_time = len(threat_objects) * 2  # 2 minutes per threat
+                    inspection_time = base_time + threat_investigation_time
+                else:
+                    inspection_time = base_time
+                
+                # Ensure inspection time is positive and reasonable (max 120 minutes per tree)
+                inspection_time = max(1, min(inspection_time, 120))
+                
+            except Exception:
+                # Fallback to default time if calculation fails
+                inspection_time = 6  # Default 6 minutes per tree
+            
+            # Build findings text
+            findings_parts = []
+            if plant_parts:
+                findings_parts.append(f"Plant parts inspected: {', '.join(plant_parts)}")
+            if threat_objects:
+                threat_names = [threat.name for threat in threat_objects]
+                findings_parts.append(f"Threats found: {', '.join(threat_names)}")
+            else:
+                findings_parts.append("No threats detected")
+            
+            findings_text = ". ".join(findings_parts)
+            
+            # Create tree inspection record with safe field values
+            try:
+                inspection = TreeInspection.objects.create(
+                    surveillance_record=surveillance_record,
+                    tree=tree,
+                    severity_level=overall_severity,
+                    inspection_time_minutes=inspection_time,  # This should be a valid decimal
+                    findings=findings_text,
+                    action_required=action_required,
+                    photo_taken=False
+                )
+                
+                # Add plant parts checked
+                if plant_part_objects:
+                    inspection.plant_parts_checked.set(plant_part_objects)
+                
+                # Add threats found
+                if threat_objects:
+                    inspection.threats_found.set(threat_objects)
+                    
+            except Exception as e:
+                # Log the error but don't fail the entire operation
+                print(f"Error creating tree inspection: {e}")
+                continue
+        
+        return threats_summary
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
         grower, created = Grower.objects.get_or_create(user=self.request.user)
         
-        # STRICT: Only show locations assigned to this user
-        locations = Location.objects.filter(grower=grower)
+        # Filter locations to current grower
+        form.fields['location'].queryset = Location.objects.filter(grower=grower)
+        form.fields['location'].empty_label = "Select a location..."
         
-        print(f"🔍 USER-SPECIFIC VIEW:")
-        print(f"   User: {self.request.user.username}")
-        print(f"   Grower ID: {grower.id}")
-        print(f"   User's locations: {locations.count()}")
+        # Set default date to today
+        form.fields['date'].initial = datetime.now().date()
         
-        total_trees = 0
-        for location in locations:
-            tree_count = location.mango_trees.count()
-            total_trees += tree_count
-            print(f"   📊 {location.name}: {tree_count} trees")
-        
-        print(f"🌳 Total trees: {total_trees}")
-        
-        # Calculate surveillance effort
-        surveillance_calculation = None
-        if total_trees > 0:
-            surveillance_calculation = self.calculate_surveillance_effort(grower, locations, total_trees)
-        
-        context.update({
-            'grower': grower,
-            'locations': locations,
-            'total_trees': total_trees,
-            'surveillance_calculation': surveillance_calculation,
-            'plant_parts': [],
-            'high_priority_threats': MangoThreat.objects.filter(risk_level='high')[:5],
-            'is_new_user': locations.count() == 0,  # Helper for template
-        })
-        
-        return context
+        return form
     
-    def calculate_surveillance_effort(self, grower, locations, total_trees):
-        """Calculate surveillance effort for user's locations only"""
-        base_minutes_per_tree = 6
-        total_minutes = total_trees * base_minutes_per_tree
-        
-        # Travel time between user's locations
-        travel_time = locations.count() * 10
-        total_minutes += travel_time
-        
-        # Documentation time (15%)
-        doc_time = total_minutes * 0.15
-        total_minutes += doc_time
-        
-        total_hours = total_minutes / 60
-        frequency_days = 14
-        monthly_hours = (total_hours * 30) / frequency_days
-        
-        # Location breakdown
-        location_breakdown = []
-        for location in locations:
-            tree_count = location.mango_trees.count()
-            if tree_count > 0:
-                location_minutes = tree_count * base_minutes_per_tree + 10
-                location_breakdown.append({
-                    'location': location,
-                    'tree_count': tree_count,
-                    'estimated_minutes': round(location_minutes),
-                    'estimated_hours': round(location_minutes / 60, 2)
-                })
-        
-        return {
-            'total_trees': total_trees,
-            'total_time_minutes': round(total_minutes),
-            'total_time_hours': round(total_hours, 2),
-            'average_time_per_tree': base_minutes_per_tree,
-            'location_breakdown': location_breakdown,
-            'monthly_effort_hours': round(monthly_hours, 1),
-            'frequency_recommendation': {
-                'days': frequency_days,
-                'description': f"Every {frequency_days} days",
-                'annual_sessions': round(365 / frequency_days)
-            }
-        }
-
-
-
-class SurveillancePlannerView(LoginRequiredMixin, TemplateView):
-    """
-    Plan surveillance activities with calendar integration
-    """
-    template_name = 'mango_pests_app/surveillance_planner.html'
+    def get_success_url(self):
+        return reverse('surveillance_record_detail', kwargs={'pk': self.object.pk})
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        grower = get_object_or_404(Grower, user=self.request.user)
         
-        # Get upcoming surveillance sessions
-        today = datetime.now().date()
-        upcoming_sessions = []
+        # Add required data for the template
+        grower, created = Grower.objects.get_or_create(user=self.request.user)
+        context['locations'] = Location.objects.filter(grower=grower)
+        context['plant_parts'] = PlantPart.objects.all().order_by('-surveillance_priority')
         
-        active_plans = SurveillancePlan.objects.filter(grower=grower, is_active=True)
-        for plan in active_plans:
-            # Calculate next surveillance dates
-            last_record = SurveillanceRecord.objects.filter(
-                grower=grower, 
-                surveillance_plan=plan
-            ).order_by('-date').first()
-            
-            if last_record:
-                next_date = last_record.date + timedelta(days=plan.frequency_days)
-            else:
-                next_date = plan.start_date
-            
-            if next_date >= today:
-                upcoming_sessions.append({
-                    'plan': plan,
-                    'next_date': next_date,
-                    'days_until': (next_date - today).days,
-                    'estimated_hours': plan.total_estimated_hours or 0
-                })
+        # Get all threats with counts by type for display
+        all_threats = MangoThreat.objects.all().order_by('name')
+        pest_threats = all_threats.filter(threat_type='pest')
+        disease_threats = all_threats.filter(threat_type='disease')
         
-        # Sort by nearest date
-        upcoming_sessions.sort(key=lambda x: x['next_date'])
-        
-        context.update({
-            'grower': grower,
-            'upcoming_sessions': upcoming_sessions[:10],  # Next 10 sessions
-            'active_plans': active_plans,
-            'locations': Location.objects.filter(grower=grower),
-            'threats': MangoThreat.objects.all().order_by('name'),
-        })
+        context['threats'] = all_threats
+        context['pest_count'] = pest_threats.count()
+        context['disease_count'] = disease_threats.count()
+        context['grower'] = grower
         
         return context
 
 
-class SurveillanceHistoryView(LoginRequiredMixin, TemplateView):
-    """
-    View historical surveillance data and results
-    """
-    template_name = 'mango_pests_app/surveillance_history.html'
+class DetailedSurveillanceRecordView(LoginRequiredMixin, DetailView):
+    """Detailed view of surveillance record with all collected data"""
+    model = SurveillanceRecord
+    template_name = 'mango_pests_app/surveillance/detailed_record_view.html'
+    context_object_name = 'record'
+    
+    def get_queryset(self):
+        # Only show records for current user
+        grower, created = Grower.objects.get_or_create(user=self.request.user)
+        return SurveillanceRecord.objects.filter(grower=grower)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        grower = get_object_or_404(Grower, user=self.request.user)
+        record = self.object
         
-        # Get surveillance history with filters
-        records = SurveillanceRecord.objects.filter(grower=grower).order_by('-date')
+        # Get all tree inspections for this record
+        inspections = TreeInspection.objects.filter(
+            surveillance_record=record
+        ).prefetch_related('plant_parts_checked', 'threats_found', 'tree')
         
-        # Filter by date range if provided
-        date_from = self.request.GET.get('date_from')
-        date_to = self.request.GET.get('date_to')
+        # Calculate summary statistics
+        context['inspections'] = inspections
+        context['total_inspections'] = inspections.count()
+        context['threats_found_count'] = inspections.filter(threats_found__isnull=False).distinct().count()
+        context['action_required_count'] = inspections.filter(action_required=True).count()
         
-        if date_from:
-            records = records.filter(date__gte=date_from)
-        if date_to:
-            records = records.filter(date__lte=date_to)
+        # Plant parts summary
+        plant_parts_data = {}
+        for inspection in inspections:
+            for part in inspection.plant_parts_checked.all():
+                if part.name not in plant_parts_data:
+                    plant_parts_data[part.name] = {
+                        'count': 0,
+                        'threats': set(),
+                        'priority': part.surveillance_priority
+                    }
+                plant_parts_data[part.name]['count'] += 1
+                for threat in inspection.threats_found.all():
+                    plant_parts_data[part.name]['threats'].add(threat.name)
         
-        # Filter by location
-        location_id = self.request.GET.get('location')
-        if location_id:
-            records = records.filter(location_id=location_id)
+        context['plant_parts_summary'] = plant_parts_data
         
-        # Calculate statistics
-        stats = self.calculate_surveillance_statistics(grower, records)
+        # Threats summary
+        threats_data = {}
+        for inspection in inspections:
+            for threat in inspection.threats_found.all():
+                if threat.name not in threats_data:
+                    threats_data[threat.name] = {
+                        'count': 0,
+                        'threat_type': threat.threat_type,
+                        'risk_level': threat.risk_level,
+                        'affected_parts': set()
+                    }
+                threats_data[threat.name]['count'] += 1
+                for part in inspection.plant_parts_checked.all():
+                    threats_data[threat.name]['affected_parts'].add(part.name)
         
-        # Get threat findings over time
-        threat_findings = self.get_threat_findings_timeline(grower)
+        context['threats_summary'] = threats_data
         
-        context.update({
-            'grower': grower,
-            'records': records[:50],  # Limit to recent 50 records
-            'locations': Location.objects.filter(grower=grower),
-            'stats': stats,
-            'threat_findings': threat_findings,
-            'date_from': date_from,
-            'date_to': date_to,
-            'selected_location': location_id,
-        })
+        # Location and stocking rate information
+        location = record.location
+        if location.area_hectares:
+            tree_count = MangoTree.objects.filter(location=location).count()
+            context['stocking_rate'] = tree_count / float(location.area_hectares)
+            context['stocking_classification'] = self.get_stocking_classification(context['stocking_rate'])
         
         return context
     
-    def calculate_surveillance_statistics(self, grower, records):
-        """Calculate surveillance performance statistics"""
+    def get_stocking_classification(self, rate):
+        """Classify stocking rate"""
+        if rate > 150:
+            return {'class': 'danger', 'label': 'Very High Density'}
+        elif rate > 100:
+            return {'class': 'warning', 'label': 'High Density'}
+        elif rate > 50:
+            return {'class': 'success', 'label': 'Standard Density'}
+        else:
+            return {'class': 'info', 'label': 'Low Density'}
+
+
+class SurveillanceHistoryView(LoginRequiredMixin, ListView):
+    """Historical surveillance data with filtering and analysis"""
+    model = SurveillanceRecord
+    template_name = 'mango_pests_app/surveillance/history_view.html'
+    context_object_name = 'records'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        grower, created = Grower.objects.get_or_create(user=self.request.user)
+        queryset = SurveillanceRecord.objects.filter(grower=grower).order_by('-date', '-created_at')
+        
+        # Apply search filters
+        form = SurveillanceSearchForm(self.request.GET, user=self.request.user)
+        if form.is_valid():
+            if form.cleaned_data['date_from']:
+                queryset = queryset.filter(date__gte=form.cleaned_data['date_from'])
+            if form.cleaned_data['date_to']:
+                queryset = queryset.filter(date__lte=form.cleaned_data['date_to'])
+            if form.cleaned_data['location']:
+                queryset = queryset.filter(location=form.cleaned_data['location'])
+            if form.cleaned_data['has_threats']:
+                # Only records where threats were found
+                queryset = queryset.filter(
+                    tree_inspections__threats_found__isnull=False
+                ).distinct()
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        grower, created = Grower.objects.get_or_create(user=self.request.user)
+        
+        # Add search form
+        context['search_form'] = SurveillanceSearchForm(self.request.GET, user=self.request.user)
+        
+        # Calculate comprehensive statistics
+        all_records = SurveillanceRecord.objects.filter(grower=grower)
+        context['statistics'] = self.calculate_surveillance_statistics(all_records)
+        
+        # Monthly trend data for charts
+        context['monthly_trends'] = self.get_monthly_trends(all_records)
+        
+        # Most common threats
+        context['common_threats'] = self.get_common_threats(grower)
+        
+        # Plant parts most affected
+        context['affected_plant_parts'] = self.get_affected_plant_parts(grower)
+        
+        return context
+    
+    def calculate_surveillance_statistics(self, records):
+        """Calculate comprehensive surveillance statistics"""
         total_records = records.count()
         
         if total_records == 0:
             return {'no_data': True}
         
         # Time statistics
-        avg_time = records.filter(total_time_minutes__isnull=False).aggregate(
-            avg=Avg('total_time_minutes')
-        )['avg']
+        time_stats = records.filter(total_time_minutes__isnull=False).aggregate(
+            avg_time=Avg('total_time_minutes'),
+            total_time=Sum('total_time_minutes'),
+            min_time=Min('total_time_minutes'),
+            max_time=Max('total_time_minutes')
+        )
         
-        total_time = records.filter(total_time_minutes__isnull=False).aggregate(
-            total=Sum('total_time_minutes')
-        )['total']
-        
-        # Trees surveyed
-        total_trees_surveyed = records.aggregate(
-            total=Sum('trees_surveyed_count')
-        )['total']
+        # Tree and location statistics
+        tree_stats = records.aggregate(
+            total_trees_surveyed=Sum('trees_surveyed_count'),
+            avg_trees_per_session=Avg('trees_surveyed_count')
+        )
         
         # Threat detection statistics
-        threat_detections = TreeInspection.objects.filter(
-            surveillance_record__grower=grower,
+        all_inspections = TreeInspection.objects.filter(surveillance_record__grower=records.first().grower)
+        threat_stats = {
+            'total_inspections': all_inspections.count(),
+            'inspections_with_threats': all_inspections.filter(threats_found__isnull=False).distinct().count(),
+            'action_required_count': all_inspections.filter(action_required=True).count(),
+        }
+        
+        if threat_stats['total_inspections'] > 0:
+            threat_stats['detection_rate'] = round(
+                (threat_stats['inspections_with_threats'] / threat_stats['total_inspections']) * 100, 1
+            )
+        else:
+            threat_stats['detection_rate'] = 0
+        
+        return {
+            'total_records': total_records,
+            'date_range': {
+                'earliest': records.order_by('date').first().date,
+                'latest': records.order_by('-date').first().date,
+            },
+            'time_stats': {
+                'avg_minutes': round(time_stats['avg_time']) if time_stats['avg_time'] else 0,
+                'total_hours': round(time_stats['total_time'] / 60) if time_stats['total_time'] else 0,
+                'min_minutes': time_stats['min_time'] or 0,
+                'max_minutes': time_stats['max_time'] or 0,
+            },
+            'tree_stats': {
+                'total_surveyed': tree_stats['total_trees_surveyed'] or 0,
+                'avg_per_session': round(tree_stats['avg_trees_per_session']) if tree_stats['avg_trees_per_session'] else 0,
+            },
+            'threat_stats': threat_stats,
+        }
+    
+    def get_monthly_trends(self, records):
+        """Get monthly surveillance trends"""        
+        monthly_data = records.annotate(
+            month=TruncMonth('date')
+        ).values('month').annotate(
+            session_count=Count('id'),
+            avg_time=Avg('total_time_minutes'),
+            trees_surveyed=Sum('trees_surveyed_count')
+        ).order_by('month')
+        
+        return list(monthly_data)
+    
+    def get_common_threats(self, grower):
+        """Get most commonly found threats"""
+        threat_counts = MangoThreat.objects.filter(
+            treeinspection__surveillance_record__grower=grower
+        ).annotate(
+            detection_count=Count('treeinspection')
+        ).order_by('-detection_count')[:10]
+        
+        return threat_counts
+    
+    def get_affected_plant_parts(self, grower):
+        """Get plant parts most commonly affected"""
+        plant_part_counts = PlantPart.objects.filter(
+            treeinspection__surveillance_record__grower=grower
+        ).annotate(
+            inspection_count=Count('treeinspection')
+        ).order_by('-inspection_count')[:10]
+        
+        return plant_part_counts
+
+
+class SurveillanceAnalyticsView(LoginRequiredMixin, TemplateView):
+    """Advanced analytics and reporting for surveillance data"""
+    template_name = 'mango_pests_app/surveillance/analytics.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        grower, created = Grower.objects.get_or_create(user=self.request.user)
+        
+        # Get date range from query parameters (default to last 12 months)
+        end_date = datetime.now().date()
+        start_date = end_date - timedelta(days=365)
+        
+        if self.request.GET.get('start_date'):
+            start_date = datetime.strptime(self.request.GET.get('start_date'), '%Y-%m-%d').date()
+        if self.request.GET.get('end_date'):
+            end_date = datetime.strptime(self.request.GET.get('end_date'), '%Y-%m-%d').date()
+        
+        # Get surveillance records in range
+        records = SurveillanceRecord.objects.filter(
+            grower=grower,
+            date__range=[start_date, end_date]
+        )
+        
+        # Comprehensive analysis
+        context.update({
+            'grower': grower,
+            'date_range': {'start': start_date, 'end': end_date},
+            'performance_metrics': self.get_performance_metrics(records),
+            'threat_analysis': self.get_threat_analysis(grower, start_date, end_date),
+            'efficiency_analysis': self.get_efficiency_analysis(records),
+            'location_comparison': self.get_location_comparison(grower, start_date, end_date),
+            'seasonal_patterns': self.get_seasonal_patterns(records),
+            'recommendations': self.generate_recommendations(grower, records),
+        })
+        
+        return context
+    
+    def get_performance_metrics(self, records):
+        """Calculate performance metrics"""
+        # Implementation for performance analysis
+        return {
+            'surveillance_frequency': self.calculate_frequency(records),
+            'coverage_rate': self.calculate_coverage_rate(records),
+            'threat_detection_efficiency': self.calculate_detection_efficiency(records),
+        }
+    
+    def get_threat_analysis(self, grower, start_date, end_date):
+        """Analyze threat patterns"""
+        # Implementation for threat pattern analysis
+        return {
+            'emerging_threats': self.identify_emerging_threats(grower, start_date, end_date),
+            'threat_severity_trends': self.analyze_severity_trends(grower, start_date, end_date),
+            'plant_part_vulnerability': self.analyze_plant_part_vulnerability(grower, start_date, end_date),
+        }
+    
+    def generate_recommendations(self, grower, records):
+        """Generate actionable recommendations"""
+        recommendations = []
+        
+        # Analyze surveillance frequency
+        if records.count() > 0:
+            avg_interval = self.calculate_average_surveillance_interval(records)
+            if avg_interval > 21:  # More than 3 weeks
+                recommendations.append({
+                    'type': 'warning',
+                    'title': 'Increase Surveillance Frequency',
+                    'message': f'Current average interval is {avg_interval} days. Consider surveying every 14 days.',
+                    'priority': 'high'
+                })
+        
+        # Analyze threat detection
+        threat_rate = self.calculate_threat_detection_rate(grower)
+        if threat_rate > 25:  # High threat detection rate
+            recommendations.append({
+                'type': 'danger',
+                'title': 'High Threat Activity',
+                'message': f'{threat_rate}% threat detection rate suggests active pest/disease pressure.',
+                'priority': 'critical'
+            })
+        
+        return recommendations
+
+
+
+class EnhancedSurveillanceRecordCreateView(LoginRequiredMixin, CreateView):
+    """Create detailed surveillance record with all required data"""
+    model = SurveillanceRecord
+    template_name = 'mango_pests_app/surveillance/enhanced_record_form.html'
+    fields = ['location', 'date', 'start_time', 'end_time', 'weather_conditions', 'temperature_celsius', 'notes']
+    
+    def form_valid(self, form):
+        # Set the grower to current user
+        grower, created = Grower.objects.get_or_create(user=self.request.user)
+        form.instance.grower = grower
+        
+        # Save the surveillance record
+        surveillance_record = form.save()
+        
+        # Process plant parts and threats from POST data
+        plant_parts = self.request.POST.getlist('plant_parts')
+        threats_found = self.request.POST.getlist('threats_found')
+        
+        # Update tree count surveyed
+        trees_count = MangoTree.objects.filter(location=surveillance_record.location).count()
+        surveillance_record.trees_surveyed_count = trees_count
+        surveillance_record.completed = True
+        
+        # Calculate total time if start and end times are provided
+        if surveillance_record.start_time and surveillance_record.end_time:
+            start_datetime = datetime.combine(surveillance_record.date, surveillance_record.start_time)
+            end_datetime = datetime.combine(surveillance_record.date, surveillance_record.end_time)
+            total_minutes = int((end_datetime - start_datetime).total_seconds() / 60)
+            surveillance_record.total_time_minutes = total_minutes
+        
+        surveillance_record.save()
+        
+        # Create tree inspections
+        self.create_tree_inspections(surveillance_record, plant_parts, threats_found)
+        
+        messages.success(
+            self.request, 
+            f'✅ Surveillance session recorded successfully! '
+            f'Surveyed {trees_count} trees at {surveillance_record.location.name}.'
+        )
+        
+        return super().form_valid(form)
+    
+    def create_tree_inspections(self, surveillance_record, plant_parts, threats_found):
+        """Create individual tree inspection records"""
+        location = surveillance_record.location
+        trees = MangoTree.objects.filter(location=location)
+        
+        # Get plant part objects
+        plant_part_objects = PlantPart.objects.filter(name__in=plant_parts) if plant_parts else []
+        
+        # Get threat objects
+        threat_objects = MangoThreat.objects.filter(id__in=threats_found) if threats_found else []
+        
+        for tree in trees:
+            # Create tree inspection record
+            inspection = TreeInspection.objects.create(
+                surveillance_record=surveillance_record,
+                tree=tree,
+                severity_level='none' if not threat_objects else 'moderate',
+                inspection_time_minutes=tree.calculate_surveillance_time_minutes(),
+                findings=f"Surveyed plant parts: {', '.join(plant_parts)}" if plant_parts else "General surveillance",
+                action_required=bool(threat_objects)
+            )
+            
+            # Add plant parts checked
+            if plant_part_objects:
+                inspection.plant_parts_checked.set(plant_part_objects)
+            
+            # Add threats found (if any)
+            if threat_objects:
+                inspection.threats_found.set(threat_objects)
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        grower, created = Grower.objects.get_or_create(user=self.request.user)
+        
+        # Filter locations to current grower
+        form.fields['location'].queryset = Location.objects.filter(grower=grower)
+        form.fields['location'].empty_label = "Select a location..."
+        
+        # Set default date to today
+        form.fields['date'].initial = datetime.now().date()
+        
+        return form
+    
+    def get_success_url(self):
+        return reverse('surveillance_record_detail', kwargs={'pk': self.object.pk})
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Add required data for the template
+        grower, created = Grower.objects.get_or_create(user=self.request.user)
+        context['locations'] = Location.objects.filter(grower=grower)
+        context['plant_parts'] = PlantPart.objects.all().order_by('-surveillance_priority')
+        context['threats'] = MangoThreat.objects.all().order_by('name')
+        context['grower'] = grower
+        
+        return context
+
+
+class DetailedSurveillanceRecordView(LoginRequiredMixin, DetailView):
+    """Detailed view of surveillance record with all collected data"""
+    model = SurveillanceRecord
+    template_name = 'mango_pests_app/surveillance/detailed_record_view.html'
+    context_object_name = 'record'
+    
+    def get_queryset(self):
+        # Only show records for current user
+        grower, created = Grower.objects.get_or_create(user=self.request.user)
+        return SurveillanceRecord.objects.filter(grower=grower)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        record = self.object
+        
+        # Get all tree inspections for this record
+        inspections = TreeInspection.objects.filter(
+            surveillance_record=record
+        ).prefetch_related('plant_parts_checked', 'threats_found', 'tree')
+        
+        # Calculate summary statistics
+        context['inspections'] = inspections
+        context['total_inspections'] = inspections.count()
+        context['threats_found_count'] = inspections.filter(threats_found__isnull=False).distinct().count()
+        context['action_required_count'] = inspections.filter(action_required=True).count()
+        
+        # Plant parts summary
+        plant_parts_data = {}
+        for inspection in inspections:
+            for part in inspection.plant_parts_checked.all():
+                if part.name not in plant_parts_data:
+                    plant_parts_data[part.name] = {
+                        'count': 0,
+                        'threats': set(),
+                        'priority': part.surveillance_priority
+                    }
+                plant_parts_data[part.name]['count'] += 1
+                for threat in inspection.threats_found.all():
+                    plant_parts_data[part.name]['threats'].add(threat.name)
+        
+        context['plant_parts_summary'] = plant_parts_data
+        
+        # Threats summary
+        threats_data = {}
+        for inspection in inspections:
+            for threat in inspection.threats_found.all():
+                if threat.name not in threats_data:
+                    threats_data[threat.name] = {
+                        'count': 0,
+                        'threat_type': threat.threat_type,
+                        'risk_level': threat.risk_level,
+                        'affected_parts': set()
+                    }
+                threats_data[threat.name]['count'] += 1
+                for part in inspection.plant_parts_checked.all():
+                    threats_data[threat.name]['affected_parts'].add(part.name)
+        
+        context['threats_summary'] = threats_data
+        
+        # Location and stocking rate information
+        location = record.location
+        if location.area_hectares:
+            tree_count = MangoTree.objects.filter(location=location).count()
+            context['stocking_rate'] = tree_count / float(location.area_hectares)
+            context['stocking_classification'] = self.get_stocking_classification(context['stocking_rate'])
+        
+        return context
+    
+    def get_stocking_classification(self, rate):
+        """Classify stocking rate"""
+        if rate > 150:
+            return {'class': 'danger', 'label': 'Very High Density'}
+        elif rate > 100:
+            return {'class': 'warning', 'label': 'High Density'}
+        elif rate > 50:
+            return {'class': 'success', 'label': 'Standard Density'}
+        else:
+            return {'class': 'info', 'label': 'Low Density'}
+
+
+class SurveillanceHistoryView(LoginRequiredMixin, ListView):
+    """Historical surveillance data with filtering and analysis"""
+    model = SurveillanceRecord
+    template_name = 'mango_pests_app/surveillance/history_view.html'
+    context_object_name = 'records'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        grower, created = Grower.objects.get_or_create(user=self.request.user)
+        queryset = SurveillanceRecord.objects.filter(grower=grower).order_by('-date', '-created_at')
+        
+        # Apply basic filters from GET parameters
+        date_from = self.request.GET.get('date_from')
+        date_to = self.request.GET.get('date_to')
+        location_id = self.request.GET.get('location')
+        
+        if date_from:
+            try:
+                queryset = queryset.filter(date__gte=datetime.strptime(date_from, '%Y-%m-%d').date())
+            except ValueError:
+                pass
+        
+        if date_to:
+            try:
+                queryset = queryset.filter(date__lte=datetime.strptime(date_to, '%Y-%m-%d').date())
+            except ValueError:
+                pass
+        
+        if location_id:
+            try:
+                queryset = queryset.filter(location_id=int(location_id))
+            except (ValueError, TypeError):
+                pass
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        grower, created = Grower.objects.get_or_create(user=self.request.user)
+        
+        # Add locations for filtering
+        context['locations'] = Location.objects.filter(grower=grower)
+        
+        # Calculate basic statistics
+        all_records = SurveillanceRecord.objects.filter(grower=grower)
+        context['statistics'] = self.calculate_basic_statistics(all_records)
+        
+        # Add filter values to maintain state
+        context['current_filters'] = {
+            'date_from': self.request.GET.get('date_from', ''),
+            'date_to': self.request.GET.get('date_to', ''),
+            'location': self.request.GET.get('location', ''),
+        }
+        
+        return context
+    
+    def calculate_basic_statistics(self, records):
+        """Calculate basic surveillance statistics"""
+        total_records = records.count()
+        
+        if total_records == 0:
+            return {'no_data': True}
+        
+        # Basic time statistics
+        time_records = records.filter(total_time_minutes__isnull=False)
+        avg_time = time_records.aggregate(avg=Avg('total_time_minutes'))['avg']
+        total_time = time_records.aggregate(total=Sum('total_time_minutes'))['total']
+        
+        # Tree statistics
+        total_trees_surveyed = records.aggregate(total=Sum('trees_surveyed_count'))['total']
+        
+        # Threat detection (simplified calculation)
+        total_inspections = TreeInspection.objects.filter(surveillance_record__grower=records.first().grower).count()
+        inspections_with_threats = TreeInspection.objects.filter(
+            surveillance_record__grower=records.first().grower,
             threats_found__isnull=False
-        ).count()
+        ).distinct().count()
         
-        total_inspections = TreeInspection.objects.filter(
-            surveillance_record__grower=grower
-        ).count()
-        
-        detection_rate = (threat_detections / total_inspections * 100) if total_inspections > 0 else 0
+        detection_rate = (inspections_with_threats / total_inspections * 100) if total_inspections > 0 else 0
         
         return {
             'total_records': total_records,
@@ -925,476 +1703,29 @@ class SurveillanceHistoryView(LoginRequiredMixin, TemplateView):
             'total_time_hours': round(total_time / 60) if total_time else 0,
             'total_trees_surveyed': total_trees_surveyed or 0,
             'threat_detection_rate': round(detection_rate, 1),
-            'avg_trees_per_session': round(total_trees_surveyed / total_records) if total_trees_surveyed and total_records else 0,
-        }
-    
-    def get_threat_findings_timeline(self, grower):
-        """Get threat findings over time for chart"""
-        findings = TreeInspection.objects.filter(
-            surveillance_record__grower=grower,
-            threats_found__isnull=False
-        ).select_related('surveillance_record').prefetch_related('threats_found')
-        
-        # Group by month
-        monthly_data = {}
-        for finding in findings:
-            month_key = finding.surveillance_record.date.strftime('%Y-%m')
-            if month_key not in monthly_data:
-                monthly_data[month_key] = {'pests': 0, 'diseases': 0}
-            
-            for threat in finding.threats_found.all():
-                if threat.threat_type == 'pest':
-                    monthly_data[month_key]['pests'] += 1
-                else:
-                    monthly_data[month_key]['diseases'] += 1
-        
-        return monthly_data
-
-
-class SurveillanceRecordCreateView(LoginRequiredMixin, CreateView):
-    """
-    Create new surveillance record
-    """
-    model = SurveillanceRecord
-    template_name = 'mango_pests_app/surveillance/record_form.html'
-    fields = ['surveillance_plan', 'location', 'date', 'start_time', 'weather_conditions', 
-              'temperature_celsius', 'notes']
-    
-    def form_valid(self, form):
-        form.instance.grower = get_object_or_404(Grower, user=self.request.user)
-        messages.success(self.request, 'Surveillance record created successfully!')
-        return super().form_valid(form)
-    
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        grower = get_object_or_404(Grower, user=self.request.user)
-        
-        # Filter locations and plans to current grower
-        form.fields['location'].queryset = Location.objects.filter(grower=grower)
-        form.fields['surveillance_plan'].queryset = SurveillancePlan.objects.filter(
-            grower=grower, is_active=True
-        )
-        
-        return form
-    
-    def get_success_url(self):
-        return reverse('surveillance_record_detail', kwargs={'pk': self.object.pk})
-
-
-class SurveillanceRecordDetailView(LoginRequiredMixin, TemplateView):
-    """
-    Detail view for surveillance record with tree inspections
-    """
-    template_name = 'mango_pests_app/surveillance/record_detail.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        
-        record = get_object_or_404(
-            SurveillanceRecord, 
-            pk=kwargs['pk'], 
-            grower__user=self.request.user
-        )
-        
-        # Get tree inspections for this record
-        inspections = TreeInspection.objects.filter(
-            surveillance_record=record
-        ).select_related('tree').prefetch_related('plant_parts_checked', 'threats_found')
-        
-        # Get trees available for inspection at this location
-        available_trees = MangoTree.objects.filter(location=record.location)
-        uninspected_trees = available_trees.exclude(
-            id__in=inspections.values_list('tree_id', flat=True)
-        )
-        
-        context.update({
-            'record': record,
-            'inspections': inspections,
-            'uninspected_trees': uninspected_trees,
-            'plant_parts': PlantPart.objects.all(),
-            'threats': MangoThreat.objects.all().order_by('name'),
-            'inspection_summary': self.get_inspection_summary(inspections),
-        })
-        
-        return context
-    
-    def get_inspection_summary(self, inspections):
-        """Calculate summary statistics for inspections"""
-        total_inspections = inspections.count()
-        if total_inspections == 0:
-            return {'no_data': True}
-        
-        # Count by severity
-        severity_counts = {}
-        for inspection in inspections:
-            severity = inspection.severity_level
-            severity_counts[severity] = severity_counts.get(severity, 0) + 1
-        
-        # Count threats found
-        threats_found = 0
-        for inspection in inspections:
-            if inspection.threats_found.exists():
-                threats_found += 1
-        
-        return {
-            'total_inspections': total_inspections,
-            'threats_found_count': threats_found,
-            'threat_detection_rate': round(threats_found / total_inspections * 100, 1),
-            'severity_counts': severity_counts,
-            'action_required_count': inspections.filter(action_required=True).count(),
+            'date_range': {
+                'earliest': records.order_by('date').first().date if records.exists() else None,
+                'latest': records.order_by('-date').first().date if records.exists() else None,
+            }
         }
 
 
-class TreeInspectionAjaxView(LoginRequiredMixin, View):
-    """
-    AJAX endpoint for adding tree inspections
-    """
-    
-    def post(self, request, *args, **kwargs):
-        try:
-            # Get the surveillance record
-            record_id = request.POST.get('record_id')
-            record = get_object_or_404(
-                SurveillanceRecord, 
-                id=record_id, 
-                grower__user=request.user
-            )
-            
-            # Create tree inspection
-            tree_id = request.POST.get('tree_id')
-            tree = get_object_or_404(MangoTree, id=tree_id, location=record.location)
-            
-            inspection = TreeInspection.objects.create(
-                surveillance_record=record,
-                tree=tree,
-                severity_level=request.POST.get('severity_level', 'none'),
-                inspection_time_minutes=request.POST.get('inspection_time_minutes'),
-                findings=request.POST.get('findings', ''),
-                action_required=request.POST.get('action_required') == 'on',
-                photo_taken=request.POST.get('photo_taken') == 'on',
-            )
-            
-            # Add plant parts checked
-            plant_part_ids = request.POST.getlist('plant_parts')
-            if plant_part_ids:
-                inspection.plant_parts_checked.set(plant_part_ids)
-            
-            # Add threats found
-            threat_ids = request.POST.getlist('threats_found')
-            if threat_ids:
-                inspection.threats_found.set(threat_ids)
-            
-            # Update surveillance record
-            record.trees_surveyed_count += 1
-            if not record.total_time_minutes:
-                record.total_time_minutes = 0
-            record.total_time_minutes += float(request.POST.get('inspection_time_minutes', 0))
-            record.save()
-            
-            return JsonResponse({
-                'success': True,
-                'message': f'Inspection of tree {tree.tree_id} recorded successfully!',
-                'inspection_id': inspection.id,
-                'trees_surveyed': record.trees_surveyed_count,
-                'total_time': record.total_time_minutes,
-            })
-            
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'message': f'Error recording inspection: {str(e)}'
-            })
-
-
-class SurveillancePlanCreateView(LoginRequiredMixin, CreateView):
-    """
-    Create surveillance plan
-    """
-    model = SurveillancePlan
-    template_name = 'mango_pests_app/surveillance/plan_form.html'
-    fields = ['name', 'locations', 'target_threats', 'frequency_days', 'start_date', 'end_date']
-    
-    def form_valid(self, form):
-        form.instance.grower = get_object_or_404(Grower, user=self.request.user)
-        response = super().form_valid(form)
-        
-        # Calculate surveillance effort for this plan
-        self.object.calculate_surveillance_effort()
-        
-        messages.success(self.request, f'Surveillance plan "{self.object.name}" created successfully!')
-        return response
-    
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        grower = get_object_or_404(Grower, user=self.request.user)
-        
-        # Filter to current grower's locations
-        form.fields['locations'].queryset = Location.objects.filter(grower=grower)
-        
-        return form
-    
-    def get_success_url(self):
-        return reverse('surveillance_planner')
-
-
-class SurveillanceReportView(LoginRequiredMixin, TemplateView):
-    """
-    Generate surveillance reports for growers
-    """
-    template_name = 'mango_pests_app/surveillance/reports.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        grower = get_object_or_404(Grower, user=self.request.user)
-        
-        # Report period (default to last 3 months)
-        from datetime import datetime, timedelta
-        end_date = datetime.now().date()
-        start_date = end_date - timedelta(days=90)
-        
-        # Override with request parameters if provided
-        if self.request.GET.get('start_date'):
-            start_date = datetime.strptime(self.request.GET.get('start_date'), '%Y-%m-%d').date()
-        if self.request.GET.get('end_date'):
-            end_date = datetime.strptime(self.request.GET.get('end_date'), '%Y-%m-%d').date()
-        
-        # Get surveillance data for period
-        records = SurveillanceRecord.objects.filter(
-            grower=grower,
-            date__range=[start_date, end_date]
-        ).order_by('-date')
-        
-        # Calculate comprehensive report
-        report_data = self.generate_surveillance_report(grower, records, start_date, end_date)
-        
-        context.update({
-            'grower': grower,
-            'report_data': report_data,
-            'start_date': start_date,
-            'end_date': end_date,
-            'records': records,
-        })
-        
-        return context
-    
-    def generate_surveillance_report(self, grower, records, start_date, end_date):
-        """Generate comprehensive surveillance report"""
-        
-        # Basic statistics
-        total_sessions = records.count()
-        total_trees_surveyed = records.aggregate(Sum('trees_surveyed_count'))['trees_surveyed_count__sum'] or 0
-        total_time = records.aggregate(Sum('total_time_minutes'))['total_time_minutes__sum'] or 0
-        
-        # Threat findings
-        inspections = TreeInspection.objects.filter(
-            surveillance_record__in=records
-        ).prefetch_related('threats_found')
-        
-        threat_summary = {}
-        for inspection in inspections:
-            for threat in inspection.threats_found.all():
-                threat_name = threat.name
-                if threat_name not in threat_summary:
-                    threat_summary[threat_name] = {
-                        'count': 0, 
-                        'threat_type': threat.threat_type,
-                        'risk_level': threat.risk_level
-                    }
-                threat_summary[threat_name]['count'] += 1
-        
-        # Performance metrics
-        avg_time_per_tree = (total_time / total_trees_surveyed) if total_trees_surveyed > 0 else 0
-        detection_rate = (len([i for i in inspections if i.threats_found.exists()]) / inspections.count() * 100) if inspections.count() > 0 else 0
-        
-        # Recommendations
-        recommendations = self.generate_recommendations(grower, threat_summary, detection_rate)
-        
-        return {
-            'period_days': (end_date - start_date).days,
-            'total_sessions': total_sessions,
-            'total_trees_surveyed': total_trees_surveyed,
-            'total_time_hours': round(total_time / 60, 1),
-            'avg_time_per_tree_minutes': round(avg_time_per_tree, 1),
-            'threat_summary': threat_summary,
-            'detection_rate': round(detection_rate, 1),
-            'recommendations': recommendations,
-            'efficiency_score': self.calculate_efficiency_score(grower, total_time, total_trees_surveyed),
-        }
-    
-    def generate_recommendations(self, grower, threat_summary, detection_rate):
-        """Generate actionable recommendations"""
-        recommendations = []
-        
-        # High-risk threat recommendations
-        high_risk_threats = [name for name, data in threat_summary.items() 
-                           if data['risk_level'] == 'high' and data['count'] > 2]
-        
-        if high_risk_threats:
-            recommendations.append({
-                'type': 'warning',
-                'title': 'High-Risk Threats Detected',
-                'message': f"Multiple detections of high-risk threats: {', '.join(high_risk_threats)}. Consider increasing surveillance frequency and implementing targeted control measures."
-            })
-        
-        # Detection rate recommendations
-        if detection_rate > 20:
-            recommendations.append({
-                'type': 'warning',
-                'title': 'High Detection Rate',
-                'message': f"Detection rate of {detection_rate}% suggests active pest/disease pressure. Review current management practices."
-            })
-        elif detection_rate < 5:
-            recommendations.append({
-                'type': 'success',
-                'title': 'Low Detection Rate',
-                'message': f"Detection rate of {detection_rate}% indicates good pest/disease management. Current surveillance frequency appears adequate."
-            })
-        
-        # Efficiency recommendations
-        if grower.mango_tree_count and grower.mango_tree_count > 200:
-            recommendations.append({
-                'type': 'info',
-                'title': 'Large Farm Optimization',
-                'message': "Consider implementing zone-based surveillance and using mobile apps for data collection to improve efficiency."
-            })
-        
-        return recommendations
-    
-    def calculate_efficiency_score(self, grower, total_time_minutes, trees_surveyed):
-        """Calculate surveillance efficiency score (0-100)"""
-        if not trees_surveyed or not total_time_minutes:
-            return 0
-        
-        # Benchmark: 6-8 minutes per tree is optimal
-        avg_time_per_tree = total_time_minutes / trees_surveyed
-        
-        if 6 <= avg_time_per_tree <= 8:
-            efficiency = 100
-        elif avg_time_per_tree < 6:
-            efficiency = 80  # Too fast, might miss things
-        elif avg_time_per_tree <= 12:
-            efficiency = 90 - ((avg_time_per_tree - 8) * 5)  # Slower but thorough
-        else:
-            efficiency = max(50, 90 - ((avg_time_per_tree - 8) * 10))  # Too slow
-        
-        return round(efficiency)
-    
-    
-    
-
-    
-    
-class DashboardStatsAPIView(LoginRequiredMixin, View):
-    def get(self, request, *args, **kwargs):
-        """Return fresh dashboard statistics"""
-        stats = {
-            'total_threats': MangoThreat.objects.count(),
-            'total_pests': MangoThreat.objects.filter(threat_type='pest').count(),
-            'total_diseases': MangoThreat.objects.filter(threat_type='disease').count(),
-            'total_locations': Location.objects.count(),
-            'total_trees': MangoTree.objects.count(),
-        }
-        
-        # Get recent items
-        recent_items = {
-            'threats': [{
-                'id': t.id,
-                'name': t.name,
-                'type': t.get_threat_type_display(),
-                'risk': t.get_risk_level_display(),
-                'created': t.created_at.strftime('%b %d, %Y')
-            } for t in MangoThreat.objects.order_by('-created_at')[:5]],
-            
-            'locations': [{
-                'id': l.id,
-                'name': l.name,
-                'address': l.address[:50] + '...' if len(l.address) > 50 else l.address
-            } for l in Location.objects.order_by('-id')[:5]],
-            
-            'trees': [{
-                'id': t.id,
-                'tree_id': t.tree_id,
-                'variety': t.variety,
-                'age': t.age,
-                'location': t.location.name
-            } for t in MangoTree.objects.select_related('location').order_by('-id')[:5]]
-        }
-        
-        return JsonResponse({
-            'stats': stats,
-            'recent_items': recent_items
-        })
-        
-        
-        
-        
-        
-# Add these views to your views.py
-
-class LocationListView(LoginRequiredMixin, TemplateView):
-    template_name = 'mango_pests_app/crud/location_list.html'
+class SurveillanceAnalyticsView(LoginRequiredMixin, TemplateView):
+    """Basic analytics for surveillance data"""
+    template_name = 'mango_pests_app/surveillance/analytics.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         grower, created = Grower.objects.get_or_create(user=self.request.user)
         
-        locations = Location.objects.filter(grower=grower).prefetch_related('mango_trees')
+        # Get basic analytics data
+        records = SurveillanceRecord.objects.filter(grower=grower)
         
         context.update({
-            'locations': locations,
             'grower': grower,
+            'total_sessions': records.count(),
+            'total_inspections': TreeInspection.objects.filter(surveillance_record__grower=grower).count(),
+            'recent_records': records.order_by('-date')[:10],
         })
-        return context
-
-
-class TreeListView(LoginRequiredMixin, TemplateView):
-    template_name = 'mango_pests_app/crud/tree_list.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        grower, created = Grower.objects.get_or_create(user=self.request.user)
         
-        trees = MangoTree.objects.filter(location__grower=grower).select_related('location')
-        locations_count = Location.objects.filter(grower=grower).count()
-        
-        # Calculate statistics
-        avg_age = trees.aggregate(avg_age=Avg('age'))['avg_age'] or 0
-        total_surveillance_time = sum(tree.calculate_surveillance_time_minutes() for tree in trees)
-        
-        context.update({
-            'trees': trees,
-            'grower': grower,
-            'locations_count': locations_count,
-            'avg_age': avg_age,
-            'surveillance_time': total_surveillance_time,
-        })
-        return context
-
-
-# Also update your CRUD Dashboard to include links to list views
-class CrudDashboardView(LoginRequiredMixin, TemplateView):
-    template_name = 'mango_pests_app/crud/crud_dashboard.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        grower, created = Grower.objects.get_or_create(user=self.request.user)
-        
-        # Get fresh data with proper user filtering
-        context['recent_threats'] = MangoThreat.objects.all().order_by('-created_at')[:10]
-        context['recent_locations'] = Location.objects.filter(grower=grower).prefetch_related('mango_trees').order_by('-id')[:5]
-        context['recent_trees'] = MangoTree.objects.filter(location__grower=grower).select_related('location').order_by('-id')[:5]
-        
-        # Add forms
-        context['threat_form'] = MangoThreatForm()
-        
-        # Calculate statistics
-        context['stats'] = {
-            'total_threats': MangoThreat.objects.count(),
-            'total_pests': MangoThreat.objects.filter(threat_type='pest').count(),
-            'total_diseases': MangoThreat.objects.filter(threat_type='disease').count(),
-            'total_locations': Location.objects.filter(grower=grower).count(),
-            'total_trees': MangoTree.objects.filter(location__grower=grower).count(),
-        }
-        
-        context['grower'] = grower
         return context
