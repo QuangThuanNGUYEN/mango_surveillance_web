@@ -2,7 +2,7 @@
 from django.contrib import admin
 from .models import (
     Grower, Location, MangoTree, MangoThreat, SurveillanceRecord, 
-    TreeInspection, SurveillancePlan, PlantPart, Pest, Disease, Inspection
+    TreeInspection, SurveillancePlan, PlantPart
 )
 
 
@@ -134,9 +134,7 @@ class PlantPartAdmin(admin.ModelAdmin):
 
 
 # Register remaining models with basic admin
-admin.site.register(Pest)
-admin.site.register(Disease)
-admin.site.register(Inspection)
+
 
 # Customize Admin Site Header
 admin.site.site_header = "Mango Surveillance Administration"

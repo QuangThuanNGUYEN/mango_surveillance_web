@@ -26,7 +26,6 @@
         <form method="post" novalidate class="crud-form">
             {% csrf_token %}
             
-            <!-- Enhanced form fields with better labels -->
             <div class="form-group">
                 <label for="{{ form.location.id_for_label }}">📍 Location *</label>
                 {{ form.location }}

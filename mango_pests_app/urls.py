@@ -6,7 +6,7 @@ from .views import (
     # Main Views
     HomeView, ThreatListView, ThreatDetailView, AboutView, CompareThreatsView,
     # Surveillance Calculator
-    EnhancedSurveillanceCalculatorView,
+    SurveillanceCalculatorView,
     # CRUD Views
     CrudDashboardView, CrudRedirectView,
     ThreatCreateView, ThreatUpdateView, ThreatDeleteView,
@@ -15,8 +15,8 @@ from .views import (
     LocationListView, TreeListView,
     # Analytics
     ThreatAnalyticsView,
-    # Enhanced Surveillance Views
-    EnhancedSurveillanceRecordCreateView, DetailedSurveillanceRecordView, 
+    # Surveillance Views
+    SurveillanceRecordCreateView, DetailedSurveillanceRecordView, 
     SurveillanceHistoryView, SurveillanceAnalyticsView,
     # Legacy Surveillance Views (keeping for compatibility)
     SurveillancePlannerView, SurveillanceReportView,
@@ -39,10 +39,10 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     
     # Surveillance Calculator - Core Business Feature
-    path('surveillance/', EnhancedSurveillanceCalculatorView.as_view(), name='surveillance_calculator'),
+    path('surveillance/', SurveillanceCalculatorView.as_view(), name='surveillance_calculator'),
     
-    # Enhanced Surveillance Data Collection
-    path('surveillance/records/create/', EnhancedSurveillanceRecordCreateView.as_view(), name='surveillance_record_create'),
+    # Surveillance Data Collection
+    path('surveillance/records/create/', SurveillanceRecordCreateView.as_view(), name='surveillance_record_create'),
     path('surveillance/records/<int:pk>/', DetailedSurveillanceRecordView.as_view(), name='surveillance_record_detail'),
     path('surveillance/history/', SurveillanceHistoryView.as_view(), name='surveillance_history'),
     path('surveillance/analytics/', SurveillanceAnalyticsView.as_view(), name='surveillance_analytics'),

@@ -7,6 +7,12 @@ from .models import SurveillanceRecord, TreeInspection, MangoThreat, PlantPart, 
 import datetime
 from django.core.exceptions import ValidationError
 
+from django import forms
+from django.core.exceptions import ValidationError
+from django.utils.text import slugify
+from .models import MangoThreat
+import re
+
 class MangoThreatForm(forms.ModelForm):
     class Meta:
         model = MangoThreat
@@ -14,29 +20,235 @@ class MangoThreatForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Enter threat name'
+                'placeholder': 'Enter threat name (e.g., Fruit Fly, Anthracnose)',
+                'maxlength': 100,
+                'required': True
             }),
             'description': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 3,
-                'placeholder': 'Brief description of the threat'
+                'placeholder': 'Brief description of the threat (1-2 sentences)',
+                'required': True
             }),
             'details': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 6,
-                'placeholder': 'Detailed information about the threat'
+                'placeholder': 'Detailed information about the threat, symptoms, treatment, etc.'
             }),
             'threat_type': forms.Select(attrs={
-                'class': 'form-control'
+                'class': 'form-control',
+                'required': True
             }),
             'risk_level': forms.Select(attrs={
-                'class': 'form-control'
+                'class': 'form-control',
+                'required': True
             }),
-            'image': forms.ClearableFileInput(attrs={
+            'image': forms.FileInput(attrs={
                 'class': 'form-control',
                 'accept': 'image/*'
             })
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Make sure required fields are marked as required
+        self.fields['name'].required = True
+        self.fields['description'].required = True
+        self.fields['threat_type'].required = True
+        self.fields['risk_level'].required = True
+        
+        # Set help text
+        self.fields['name'].help_text = 'Enter a clear, descriptive name for the threat'
+        self.fields['description'].help_text = 'Brief description (minimum 10 characters)'
+        self.fields['details'].help_text = 'Optional detailed information about the threat'
+        self.fields['threat_type'].help_text = 'Select whether this is a pest or disease'
+        self.fields['risk_level'].help_text = 'How severe is this threat?'
+        self.fields['image'].help_text = 'Optional image of the threat (JPG, PNG, GIF - max 5MB)'
+    
+    def clean_name(self):
+        """Validate and clean the threat name"""
+        name = self.cleaned_data.get('name')
+        
+        if not name:
+            raise ValidationError("Threat name is required.")
+        
+        # Strip whitespace and normalize
+        name = name.strip()
+        
+        if len(name) < 3:
+            raise ValidationError("Threat name must be at least 3 characters long.")
+        
+        if len(name) > 100:
+            raise ValidationError("Threat name cannot exceed 100 characters.")
+        
+        # Check for invalid characters (allow letters, numbers, spaces, hyphens, parentheses)
+        if not re.match(r'^[a-zA-Z0-9\s\-\(\)\.\']+$', name):
+            raise ValidationError("Threat name contains invalid characters. Use only letters, numbers, spaces, hyphens, and parentheses.")
+        
+        # Check for duplicate names (case-insensitive, excluding current instance if editing)
+        instance_pk = self.instance.pk if self.instance else None
+        existing_threats = MangoThreat.objects.filter(name__iexact=name)
+        
+        if instance_pk:
+            existing_threats = existing_threats.exclude(pk=instance_pk)
+        
+        if existing_threats.exists():
+            raise ValidationError(f"A threat with the name '{name}' already exists. Please choose a different name.")
+        
+        return name
+    
+    def clean_description(self):
+        """Validate and clean the description"""
+        description = self.cleaned_data.get('description')
+        
+        if not description:
+            raise ValidationError("Description is required.")
+        
+        description = description.strip()
+        
+        if len(description) < 10:
+            raise ValidationError("Description must be at least 10 characters long.")
+        
+        if len(description) > 500:
+            raise ValidationError("Description cannot exceed 500 characters.")
+        
+        return description
+    
+    def clean_details(self):
+        """Validate and clean the detailed information"""
+        details = self.cleaned_data.get('details')
+        
+        if details:
+            details = details.strip()
+            
+            if len(details) > 2000:
+                raise ValidationError("Details cannot exceed 2000 characters.")
+        
+        return details or ""
+    
+    def clean_threat_type(self):
+        """Validate threat type"""
+        threat_type = self.cleaned_data.get('threat_type')
+        
+        if not threat_type:
+            raise ValidationError("Please select a threat type.")
+        
+        valid_types = ['pest', 'disease']
+        if threat_type not in valid_types:
+            raise ValidationError("Invalid threat type selected.")
+        
+        return threat_type
+    
+    def clean_risk_level(self):
+        """Validate risk level"""
+        risk_level = self.cleaned_data.get('risk_level')
+        
+        if not risk_level:
+            raise ValidationError("Please select a risk level.")
+        
+        valid_levels = ['low', 'moderate', 'high']
+        if risk_level not in valid_levels:
+            raise ValidationError("Invalid risk level selected.")
+        
+        return risk_level
+    
+    def clean_image(self):
+        """Validate uploaded image"""
+        image = self.cleaned_data.get('image')
+        
+        if image:
+            # Check file size (5MB limit)
+            if image.size > 5 * 1024 * 1024:  # 5MB in bytes
+                raise ValidationError("Image file size cannot exceed 5MB.")
+            
+            # Check file type
+            valid_extensions = ['.jpg', '.jpeg', '.png', '.gif']
+            file_extension = image.name.lower().split('.')[-1]
+            
+            if f'.{file_extension}' not in valid_extensions:
+                raise ValidationError("Invalid image format. Please use JPG, PNG, or GIF.")
+            
+            # Additional MIME type validation
+            valid_mime_types = ['image/jpeg', 'image/png', 'image/gif']
+            if hasattr(image, 'content_type') and image.content_type not in valid_mime_types:
+                raise ValidationError("Invalid image format detected.")
+        
+        return image
+    
+    def clean(self):
+        """Additional form-wide validation"""
+        cleaned_data = super().clean()
+        
+        name = cleaned_data.get('name')
+        description = cleaned_data.get('description')
+        threat_type = cleaned_data.get('threat_type')
+        
+        # Cross-field validation example
+        if name and description:
+            # Ensure name and description aren't identical
+            if name.lower().strip() == description.lower().strip():
+                raise ValidationError("Name and description should be different to provide more information.")
+        
+        # Validate threat type specific requirements
+        if threat_type == 'disease' and name:
+            # Suggest including pathogen type for diseases
+            disease_keywords = ['fungus', 'bacteria', 'virus', 'pathogen', 'rot', 'blight', 'canker', 'spot', 'wilt']
+            if not any(keyword in name.lower() for keyword in disease_keywords):
+                # This is just a warning, not an error
+                pass
+        
+        return cleaned_data
+    
+    def save(self, commit=True):
+        """Custom save method with additional processing"""
+        instance = super().save(commit=False)
+        
+        # Generate slug from name if not already set
+        if not instance.slug:
+            base_slug = slugify(instance.name)
+            slug = base_slug
+            counter = 1
+            
+            # Ensure unique slug
+            while MangoThreat.objects.filter(slug=slug).exclude(pk=instance.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            
+            instance.slug = slug
+        
+        if commit:
+            instance.save()
+        
+        return instance
+
+
+# Additional validation helper functions
+def validate_threat_name_uniqueness(name, exclude_pk=None):
+    """Helper function to check if threat name is unique"""
+    queryset = MangoThreat.objects.filter(name__iexact=name.strip())
+    if exclude_pk:
+        queryset = queryset.exclude(pk=exclude_pk)
+    return not queryset.exists()
+
+def generate_unique_slug(name, exclude_pk=None):
+    """Generate a unique slug for a threat name"""
+    base_slug = slugify(name)
+    slug = base_slug
+    counter = 1
+    
+    queryset = MangoThreat.objects.filter(slug=slug)
+    if exclude_pk:
+        queryset = queryset.exclude(pk=exclude_pk)
+    
+    while queryset.exists():
+        slug = f"{base_slug}-{counter}"
+        counter += 1
+        queryset = MangoThreat.objects.filter(slug=slug)
+        if exclude_pk:
+            queryset = queryset.exclude(pk=exclude_pk)
+    
+    return slug
 
 
 class LocationForm(forms.ModelForm):
@@ -286,12 +498,9 @@ class GrowerForm(forms.ModelForm):
         }
         
         
-        # Enhanced forms.py - Add to your existing forms.py file
 
-
-
-class EnhancedSurveillanceRecordForm(forms.ModelForm):
-    """Enhanced form to capture all required surveillance data"""
+class SurveillanceRecordForm(forms.ModelForm):
+    """ Form to capture all required surveillance data"""
     
     # Plant parts selection (multiple choice)
     plant_parts_surveyed = forms.ModelMultipleChoiceField(
@@ -486,7 +695,7 @@ class TreeInspectionForm(forms.ModelForm):
 
 
 class LocationDetailForm(forms.ModelForm):
-    """Enhanced location form with GPS and stocking rate data"""
+    """ Location form with GPS and stocking rate data"""
     
     class Meta:
         model = Location

@@ -34,17 +34,34 @@
         margin-bottom: 20px;
     }
     
-    .trend-up {
-        color: #28a745;
+    .trend-up { color: #28a745; }
+    .trend-down { color: #dc3545; }
+    .trend-stable { color: #ffc107; }
+    
+    .no-data-message {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
     }
     
-    .trend-down {
-        color: #dc3545;
+    .data-insight {
+        background: #f8f9fa;
+        border-left: 4px solid #007bff;
+        padding: 15px;
+        margin: 15px 0;
+        border-radius: 0 8px 8px 0;
     }
     
-    .trend-stable {
-        color: #ffc107;
+    .alert {
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
     }
+    
+    .alert-info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+    .alert-success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+    .alert-warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+    .alert-danger { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
 </style>
 {% endblock %}
 
@@ -56,17 +73,22 @@
                 <i class="fas fa-chart-line text-primary"></i>
                 Analytics Dashboard
             </h1>
-            <p class="lead text-muted">Comprehensive insights into mango threat patterns and trends</p>
+            <p class="lead text-muted">Real insights from your mango surveillance data</p>
         </div>
     </div>
 
+    <!-- Real Metrics Row -->
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="metric-card">
                 <i class="fas fa-bug fa-2x mb-2"></i>
-                <h3 id="total-threats">{{ total_threats }}</h3>
-                <p class="mb-0">Total Threats Identified</p>
-                <small><i class="fas fa-arrow-up trend-up"></i> +12% this month</small>
+                <h3 id="total-threats">{{ total_threats|default:0 }}</h3>
+                <p class="mb-0">Total Threats in Database</p>
+                {% if total_threats > 0 %}
+                    <small><i class="fas fa-info-circle"></i> System ready</small>
+                {% else %}
+                    <small><i class="fas fa-plus"></i> Add threats to get started</small>
+                {% endif %}
             </div>
         </div>
         <div class="col-md-3">
@@ -74,27 +96,41 @@
                 <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
                 <h3 id="high-risk-threats">{{ high_risk_count|default:0 }}</h3>
                 <p class="mb-0">High Risk Threats</p>
-                <small><i class="fas fa-arrow-down trend-down"></i> -5% this week</small>
+                {% if high_risk_count > 0 %}
+                    <small><i class="fas fa-arrow-up trend-up"></i> Requires attention</small>
+                {% else %}
+                    <small><i class="fas fa-check trend-up"></i> Low risk environment</small>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+                <h3 id="surveillance-sessions">{{ user_metrics.total_sessions|default:0 }}</h3>
+                <p class="mb-0">Your Surveillance Sessions</p>
+                {% if user_metrics.total_sessions > 0 %}
+                    <small><i class="fas fa-chart-line"></i> {{ user_metrics.detection_rate|default:0 }}% detection rate</small>
+                {% else %}
+                    <small><i class="fas fa-play"></i> Start your first session</small>
+                {% endif %}
             </div>
         </div>
         <div class="col-md-3">
             <div class="metric-card">
                 <i class="fas fa-map-marker-alt fa-2x mb-2"></i>
-                <h3 id="affected-locations">{{ locations_count|default:0 }}</h3>
-                <p class="mb-0">Monitored Locations</p>
-                <small><i class="fas fa-minus trend-stable"></i> Stable</small>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="metric-card">
-                <i class="fas fa-shield-alt fa-2x mb-2"></i>
-                <h3 id="prevention-rate">87%</h3>
-                <p class="mb-0">Prevention Success Rate</p>
-                <small><i class="fas fa-arrow-up trend-up"></i> +3% improvement</small>
+                <h3 id="locations-monitored">{{ locations_count|default:0 }}</h3>
+                <p class="mb-0">Your Locations</p>
+                {% if locations_count > 0 %}
+                    <small><i class="fas fa-check trend-stable"></i> Farm mapped</small>
+                {% else %}
+                    <small><i class="fas fa-plus"></i> Add locations</small>
+                {% endif %}
             </div>
         </div>
     </div>
 
+    {% if total_threats > 0 %}
+    <!-- Charts Row -->
     <div class="row mb-4">
         <div class="col-lg-6 mb-4">
             <div class="card analytics-card">
@@ -104,6 +140,17 @@
                 <div class="card-body">
                     <div class="chart-container">
                         <canvas id="threatDistributionChart"></canvas>
+                    </div>
+                    <div class="data-insight">
+                        <strong>Insight:</strong> 
+                        {% if threat_stats.by_type %}
+                            Your database contains {{ total_threats }} threats.
+                            {% for stat in threat_stats.by_type %}
+                                {{ stat.threat_type|title }}s: {{ stat.count }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            No threat data available yet.
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -118,41 +165,126 @@
                     <div class="chart-container">
                         <canvas id="riskAnalysisChart"></canvas>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card analytics-card">
-                <div class="card-header">
-                    <h5><i class="fas fa-chart-line text-success"></i> Monthly Threat Discovery Trends</h5>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="trendChart"></canvas>
+                    <div class="data-insight">
+                        <strong>Risk Assessment:</strong>
+                        {% if threat_stats.by_risk %}
+                            {% for stat in threat_stats.by_risk %}
+                                {{ stat.risk_level|title }}: {{ stat.count }} threat{{ stat.count|pluralize }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            No risk data available.
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    {% endif %}
 
+    {% if user_metrics.total_sessions > 0 %}
+    <!-- User-Specific Analytics -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card analytics-card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-line text-success"></i> Your Surveillance Performance</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <h3 class="text-primary">{{ user_metrics.total_sessions }}</h3>
+                            <p>Sessions Completed</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h3 class="text-success">{{ user_metrics.total_inspections|default:0 }}</h3>
+                            <p>Trees Inspected</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h3 class="text-warning">{{ user_metrics.threats_detected|default:0 }}</h3>
+                            <p>Unique Threats Found</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h3 class="text-info">{{ user_metrics.detection_rate|default:0 }}%</h3>
+                            <p>Detection Rate</p>
+                        </div>
+                    </div>
+                    
+                    {% if monthly_trends %}
+                    <div class="chart-container mt-4">
+                        <canvas id="monthlyTrendChart"></canvas>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Common Threats Found -->
+    {% if common_threats %}
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card analytics-card">
+                <div class="card-header">
+                    <h5><i class="fas fa-bug text-warning"></i> Most Detected Threats (Your Farm)</h5>
+                </div>
+                <div class="card-body">
+                    {% for threat in common_threats %}
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                        <div>
+                            <strong>{{ threat.name }}</strong><br>
+                            <small class="text-muted">{{ threat.get_threat_type_display }} - {{ threat.get_risk_level_display }} Risk</small>
+                        </div>
+                        <span class="badge bg-primary">{{ threat.detection_count }} detection{{ threat.detection_count|pluralize }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card analytics-card">
+                <div class="card-header">
+                    <h5><i class="fas fa-leaf text-success"></i> Most Inspected Plant Parts</h5>
+                </div>
+                <div class="card-body">
+                    {% for part in affected_plant_parts %}
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                        <div>
+                            <strong>{{ part.name }}</strong><br>
+                            <small class="text-muted">Priority {{ part.surveillance_priority }}/5</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-info">{{ part.inspection_count }} inspection{{ part.inspection_count|pluralize }}</span>
+                            {% if part.threat_count > 0 %}
+                                <br><span class="badge bg-warning">{{ part.threat_count }} threat{{ part.threat_count|pluralize }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- Statistics Table -->
     <div class="row">
         <div class="col-lg-8">
             <div class="card analytics-card">
                 <div class="card-header">
-                    <h5><i class="fas fa-table text-info"></i> Threat Statistics Breakdown</h5>
+                    <h5><i class="fas fa-table text-info"></i> Detailed Statistics</h5>
                 </div>
                 <div class="card-body">
+                    {% if total_threats > 0 %}
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead class="table-dark">
                                 <tr>
-                                    <th>Threat Type</th>
+                                    <th>Category</th>
                                     <th>Count</th>
                                     <th>Percentage</th>
-                                    <th>Risk Distribution</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -160,7 +292,7 @@
                                 <tr>
                                     <td>
                                         <span class="badge bg-{% if stat.threat_type == 'pest' %}warning{% else %}danger{% endif %}">
-                                            {{ stat.threat_type|title }}
+                                            {{ stat.threat_type|title }}s
                                         </span>
                                     </td>
                                     <td><strong>{{ stat.count }}</strong></td>
@@ -172,22 +304,61 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <div class="progress" style="height: 20px;">
-                                            <div class="progress-bar bg-success" style="width: 30%"></div>
-                                            <div class="progress-bar bg-warning" style="width: 50%"></div>
-                                            <div class="progress-bar bg-danger" style="width: 20%"></div>
-                                        </div>
-                                        <small class="text-muted">Low | Moderate | High</small>
+                                        {% if stat.count > 0 %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">None</span>
+                                        {% endif %}
                                     </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted">No threat data available</td>
+                                    <td colspan="4" class="text-center text-muted">No threat type data available</td>
+                                </tr>
+                                {% endfor %}
+                                
+                                <!-- Risk Level Breakdown -->
+                                {% for stat in threat_stats.by_risk %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-{% if stat.risk_level == 'high' %}danger{% elif stat.risk_level == 'moderate' %}warning{% else %}success{% endif %}">
+                                            {{ stat.risk_level|title }} Risk
+                                        </span>
+                                    </td>
+                                    <td><strong>{{ stat.count }}</strong></td>
+                                    <td>
+                                        {% if total_threats > 0 %}
+                                            {% widthratio stat.count total_threats 100 %}%
+                                        {% else %}
+                                            0%
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if stat.risk_level == 'high' and stat.count > 0 %}
+                                            <span class="badge bg-danger">High Priority</span>
+                                        {% elif stat.risk_level == 'moderate' and stat.count > 0 %}
+                                            <span class="badge bg-warning">Monitor</span>
+                                        {% elif stat.count > 0 %}
+                                            <span class="badge bg-success">Low Priority</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">None</span>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
+                    {% else %}
+                    <div class="no-data-message">
+                        <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                        <h4>No Data Available</h4>
+                        <p>Add some threats to your database to see detailed statistics.</p>
+                        <a href="{% url 'threat_create' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Your First Threat
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -195,38 +366,95 @@
         <div class="col-lg-4">
             <div class="card analytics-card">
                 <div class="card-header">
-                    <h5><i class="fas fa-lightbulb text-warning"></i> Key Insights</h5>
+                    <h5><i class="fas fa-lightbulb text-warning"></i> Insights & Recommendations</h5>
                 </div>
                 <div class="card-body">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i>
-                        <strong>Most Common Threat:</strong> 
-                        {% if threat_stats.by_type %}
-                            Pests account for the majority of identified threats
+                    {% if user_metrics.total_sessions > 0 %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i>
+                            <strong>Great Progress!</strong> 
+                            You've completed {{ user_metrics.total_sessions }} surveillance session{{ user_metrics.total_sessions|pluralize }}.
+                        </div>
+                        
+                        {% if user_metrics.detection_rate > 25 %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>High Detection Rate:</strong> 
+                            {{ user_metrics.detection_rate }}% of inspections found threats. Consider increased monitoring.
+                        </div>
+                        {% elif user_metrics.detection_rate > 0 %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Moderate Activity:</strong> 
+                            {{ user_metrics.detection_rate }}% detection rate indicates normal pest activity.
+                        </div>
                         {% else %}
-                            No data available yet
+                        <div class="alert alert-success">
+                            <i class="fas fa-shield-alt"></i>
+                            <strong>Clean Farm:</strong> 
+                            No threats detected in recent surveillance. Keep up the good work!
+                        </div>
                         {% endif %}
-                    </div>
+                        
+                        {% if user_metrics.avg_session_time > 0 %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-clock"></i>
+                            <strong>Average Session Time:</strong> 
+                            {{ user_metrics.avg_session_time|floatformat:0 }} minutes per session.
+                        </div>
+                        {% endif %}
+                        
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Getting Started:</strong> 
+                            Complete your first surveillance session to see personalized analytics.
+                        </div>
+                    {% endif %}
+                    
+                    {% if total_threats == 0 %}
                     <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <strong>Risk Alert:</strong> High-risk threats require immediate attention
+                        <i class="fas fa-database"></i>
+                        <strong>Setup Required:</strong> 
+                        Add threats to your database to enable full analytics.
                     </div>
-                    <div class="alert alert-success">
-                        <i class="fas fa-check-circle"></i>
-                        <strong>Good News:</strong> Prevention rates are improving month over month
-                    </div>
+                    {% endif %}
                     
                     <h6 class="mt-4">Quick Actions</h6>
                     <div class="d-grid gap-2">
+                        {% if locations_count == 0 %}
+                            <a href="{% url 'location_create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Add Your First Location
+                            </a>
+                        {% elif user_metrics.total_sessions == 0 %}
+                            <a href="{% url 'surveillance_calculator' %}" class="btn btn-success">
+                                <i class="fas fa-play"></i> Start First Surveillance
+                            </a>
+                        {% else %}
+                            <a href="{% url 'surveillance_record_create' %}" class="btn btn-success">
+                                <i class="fas fa-plus"></i> New Surveillance Session
+                            </a>
+                        {% endif %}
+                        
                         <a href="{% url 'crud_dashboard' %}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Add New Threat
+                            <i class="fas fa-cog"></i> Manage Data
                         </a>
+                        
+                        {% if total_threats == 0 %}
+                        <a href="{% url 'threat_create' %}" class="btn btn-warning">
+                            <i class="fas fa-bug"></i> Add Threats
+                        </a>
+                        {% else %}
                         <a href="{% url 'threat_list' %}" class="btn btn-outline-primary">
                             <i class="fas fa-list"></i> View All Threats
                         </a>
-                        <button class="btn btn-outline-success" onclick="exportData()">
-                            <i class="fas fa-download"></i> Export Data
-                        </button>
+                        {% endif %}
+                        
+                        {% if user_metrics.total_sessions > 0 %}
+                        <a href="{% url 'surveillance_history' %}" class="btn btn-outline-info">
+                            <i class="fas fa-history"></i> View History
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -239,147 +467,220 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const distributionCtx = document.getElementById('threatDistributionChart').getContext('2d');
+    // Only create charts if we have threat data
+    {% if total_threats > 0 %}
     
-    // Safer approach for threat data
-    const threatData = [
-        {% for stat in threat_stats.by_type %}
+    // Threat Distribution Chart
+    const distributionCtx = document.getElementById('threatDistributionChart');
+    if (distributionCtx) {
+        const threatData = [
+            {% for stat in threat_stats.by_type %}
             {
                 label: "{{ stat.threat_type|title|escapejs }}",
                 count: {{ stat.count|default:0 }}
             }{% if not forloop.last %},{% endif %}
-        {% empty %}
+            {% empty %}
             {
                 label: "No Data",
-                count: 0
+                count: 1
             }
-        {% endfor %}
-    ];
-    
-    const distributionLabels = threatData.map(item => item.label);
-    const distributionCounts = threatData.map(item => item.count);
-    
-    new Chart(distributionCtx, {
-        type: 'doughnut',
-        data: {
-            labels: distributionLabels.length > 0 ? distributionLabels : ['No Data'],
-            datasets: [{
-                data: distributionCounts.length > 0 ? distributionCounts : [1],
-                backgroundColor: distributionLabels.length > 0 ? ['#ffc107', '#dc3545', '#28a745', '#17a2b8'] : ['#e9ecef'],
-                borderWidth: 3,
-                borderColor: '#ffffff'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        padding: 20,
-                        font: { size: 14 }
+            {% endfor %}
+        ];
+        
+        const distributionLabels = threatData.map(item => item.label);
+        const distributionCounts = threatData.map(item => item.count);
+        
+        new Chart(distributionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: distributionLabels,
+                datasets: [{
+                    data: distributionCounts,
+                    backgroundColor: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'],
+                    borderWidth: 3,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            font: { size: 14 }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = distributionCounts.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : '0';
+                                return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                            }
+                        }
                     }
                 }
             }
-        }
-    });
+        });
+    }
 
-    const riskCtx = document.getElementById('riskAnalysisChart').getContext('2d');
-    
-    // Safer approach for risk data
-    const riskData = [
-        {% for stat in threat_stats.by_risk %}
+    // Risk Analysis Chart
+    const riskCtx = document.getElementById('riskAnalysisChart');
+    if (riskCtx) {
+        const riskData = [
+            {% for stat in threat_stats.by_risk %}
             {
                 label: "{{ stat.risk_level|title|escapejs }}",
                 count: {{ stat.count|default:0 }}
             }{% if not forloop.last %},{% endif %}
-        {% empty %}
+            {% empty %}
             {
                 label: "No Data",
                 count: 0
             }
-        {% endfor %}
-    ];
-    
-    const riskLabels = riskData.map(item => item.label);
-    const riskCounts = riskData.map(item => item.count);
-    const riskColors = riskLabels.map(label => {
-        switch(label.toLowerCase()) {
-            case 'low': return '#28a745';
-            case 'moderate': return '#ffc107';
-            case 'high': return '#dc3545';
-            default: return '#6c757d';
-        }
-    });
-    
-    new Chart(riskCtx, {
-        type: 'bar',
-        data: {
-            labels: riskLabels.length > 0 ? riskLabels : ['No Data'],
-            datasets: [{
-                label: 'Number of Threats',
-                data: riskCounts.length > 0 ? riskCounts : [0],
-                backgroundColor: riskColors.length > 0 ? riskColors : ['#e9ecef'],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: { stepSize: 1 }
-                }
-            },
-            plugins: {
-                legend: { display: false }
+            {% endfor %}
+        ];
+        
+        const riskLabels = riskData.map(item => item.label);
+        const riskCounts = riskData.map(item => item.count);
+        const riskColors = riskLabels.map(label => {
+            switch(label.toLowerCase()) {
+                case 'low': return '#28a745';
+                case 'moderate': return '#ffc107';
+                case 'high': return '#dc3545';
+                default: return '#6c757d';
             }
-        }
-    });
+        });
+        
+        new Chart(riskCtx, {
+            type: 'bar',
+            data: {
+                labels: riskLabels,
+                datasets: [{
+                    label: 'Number of Threats',
+                    data: riskCounts,
+                    backgroundColor: riskColors,
+                    borderColor: riskColors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { 
+                            stepSize: 1,
+                            callback: function(value) {
+                                return Number.isInteger(value) ? value : '';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                return context[0].label + ' Risk Threats';
+                            },
+                            label: function(context) {
+                                return 'Count: ' + context.parsed.y;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
 
-    const trendCtx = document.getElementById('trendChart').getContext('2d');
-    new Chart(trendCtx, {
-        type: 'line',
-        data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            datasets: [{
-                label: 'New Threats Discovered',
-                data: [2, 4, 3, 5, 2, 3],
-                borderColor: '#007bff',
-                backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                tension: 0.4,
-                fill: true
-            }, {
-                label: 'Threats Resolved',
-                data: [1, 3, 2, 4, 3, 4],
-                borderColor: '#28a745',
-                backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: { stepSize: 1 }
-                }
+    // Monthly Trend Chart (only if user has surveillance data)
+    {% if monthly_trends %}
+    const trendCtx = document.getElementById('monthlyTrendChart');
+    if (trendCtx) {
+        const monthlyData = [
+            {% for trend in monthly_trends %}
+            {
+                month: "{{ trend.month|date:'M Y'|escapejs }}",
+                sessions: {{ trend.session_count|default:0 }},
+                threats: {{ trend.threats_found|default:0 }}
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+        
+        const monthLabels = monthlyData.map(item => item.month);
+        const sessionCounts = monthlyData.map(item => item.sessions);
+        const threatCounts = monthlyData.map(item => item.threats);
+        
+        new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: monthLabels,
+                datasets: [{
+                    label: 'Surveillance Sessions',
+                    data: sessionCounts,
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }, {
+                    label: 'Threats Detected',
+                    data: threatCounts,
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
             },
-            plugins: {
-                legend: {
-                    position: 'top'
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { 
+                            stepSize: 1,
+                            callback: function(value) {
+                                return Number.isInteger(value) ? value : '';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
                 }
             }
-        }
-    });
+        });
+    }
+    {% endif %}
 });
 
-function exportData() {
-    alert('Export functionality will be implemented in the next phase!');
+// Auto-refresh function for live updates
+function refreshAnalytics() {
+    console.log('Refreshing analytics data...');
+    window.location.reload();
 }
+
+// Refresh every 5 minutes if user is actively using the page
+let lastActivity = Date.now();
+document.addEventListener('mousemove', () => lastActivity = Date.now());
+document.addEventListener('keypress', () => lastActivity = Date.now());
+
+setInterval(() => {
+    if (Date.now() - lastActivity < 300000) { // 5 minutes
+        // User is active, could refresh data via AJAX instead of full reload
+        console.log('User active, data current');
+    }
+}, 60000); // Check every minute
 </script>
 {% endblock %}

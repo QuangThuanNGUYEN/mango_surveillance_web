@@ -3,50 +3,542 @@
 
 {% block page_css %}
 <link rel="stylesheet" href="{% static 'css/crud_forms.css' %}">
+<style>
+    .crud-form-wrapper {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .crud-form-title {
+        color: #2c3e50;
+        margin-bottom: 30px;
+        text-align: center;
+        font-size: 2rem;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        color: #34495e;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+        box-sizing: border-box;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+    
+    .form-control.is-invalid {
+        border-color: #e74c3c;
+        background-color: #fdf2f2;
+    }
+    
+    .form-error {
+        color: #e74c3c;
+        font-size: 14px;
+        margin-top: 5px;
+        padding: 8px;
+        background: #fdf2f2;
+        border: 1px solid #f5c6cb;
+        border-radius: 4px;
+        display: block;
+    }
+    
+    .form-help {
+        color: #7f8c8d;
+        font-size: 14px;
+        margin-top: 5px;
+        display: block;
+    }
+    
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #27ae60, #2ecc71);
+        color: white;
+        font-weight: bold;
+    }
+    
+    .btn-submit:hover {
+        background: linear-gradient(135deg, #219a52, #27ae60);
+        transform: translateY(-2px);
+    }
+    
+    .btn-submit:disabled {
+        background: #95a5a6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .btn-back {
+        background: #95a5a6;
+        color: white;
+        margin-left: 15px;
+    }
+    
+    .btn-back:hover {
+        background: #7f8c8d;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .current-image {
+        margin-top: 10px;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .current-image img {
+        max-width: 200px;
+        max-height: 150px;
+        border-radius: 5px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .required-field {
+        color: #e74c3c;
+    }
+    
+    .form-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        border-left: 4px solid #3498db;
+    }
+    
+    .section-title {
+        color: #2c3e50;
+        margin-bottom: 15px;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+    
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+    }
+    
+    .alert-danger {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+    }
+    
+    .alert-success {
+        color: #155724;
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+    }
+
+    .loading-spinner {
+        display: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-left: 10px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
 {% endblock %}
 
-
 {% block content %}
-  <div class="crud-form-wrapper">
-    <h2 class="crud-form-title">{% if object %}Edit{% else %}Create{% endif %} Threat</h2>
-    <form method="post" enctype="multipart/form-data" novalidate class="crud-form">
-    {% csrf_token %}
-    
-    <div class="form-group">
-        <label for="{{ form.name.id_for_label }}">🏷️ Threat Name *</label>
-        {{ form.name }}
-        {% if form.name.errors %}
-            <div class="form-error">{{ form.name.errors.0 }}</div>
+<div class="crud-form-wrapper">
+    <h2 class="crud-form-title">
+        {% if object %}
+            ✏️ Edit Threat: {{ object.name }}
+        {% else %}
+            ➕ Create New Threat
         {% endif %}
-    </div>
+    </h2>
     
-    <div class="form-group">
-        <label for="{{ form.image.id_for_label }}">📷 Image</label>
-        {{ form.image }}
-        {% if form.image.errors %}
-            <div class="form-error">{{ form.image.errors.0 }}</div>
-        {% endif %}
-        <small class="form-help">Upload a clear image showing this threat</small>
-        
-        <!-- Show current image if editing -->
-        {% if form.instance.image %}
-            <div class="mt-2">
-                <p>Current image:</p>
-                <img src="{{ form.instance.image.url }}" alt="{{ form.instance.name }}" 
-                     style="max-width: 200px; max-height: 150px; border-radius: 5px;">
+    <!-- Show Django messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
             </div>
-        {% endif %}
-    </div>
+        {% endfor %}
+    {% endif %}
     
-    <!-- ... rest of your form fields ... -->
+    <!-- Show any non-field errors -->
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            <strong>Please fix the following errors:</strong>
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
     
-    <button type="submit" class="btn btn-submit">
-        💾 Save Threat
-    </button>
-</form>
+    <form method="post" enctype="multipart/form-data" class="crud-form" id="threatForm">
+        {% csrf_token %}
+        
+        <!-- Basic Information Section -->
+        <div class="form-section">
+            <div class="section-title">📋 Basic Information</div>
+            
+            <!-- Threat Name -->
+            <div class="form-group">
+                <label for="{{ form.name.id_for_label }}">
+                    🏷️ Threat Name <span class="required-field">*</span>
+                </label>
+                <input type="text" 
+                       name="name" 
+                       class="form-control {% if form.name.errors %}is-invalid{% endif %}"
+                       id="{{ form.name.id_for_label }}"
+                       value="{{ form.name.value|default:'' }}"
+                       placeholder="Enter a clear, descriptive name (e.g., 'Fruit Fly', 'Anthracnose')"
+                       required>
+                {% if form.name.errors %}
+                    {% for error in form.name.errors %}
+                        <div class="form-error">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+                <small class="form-help">Enter a clear, descriptive name (e.g., "Fruit Fly", "Anthracnose")</small>
+            </div>
+            
+            <!-- Threat Type -->
+            <div class="form-group">
+                <label for="{{ form.threat_type.id_for_label }}">
+                    🔬 Threat Type <span class="required-field">*</span>
+                </label>
+                <select name="threat_type" 
+                        class="form-control {% if form.threat_type.errors %}is-invalid{% endif %}"
+                        id="{{ form.threat_type.id_for_label }}"
+                        required>
+                    <option value="">Select threat type...</option>
+                    <option value="pest" {% if form.threat_type.value == 'pest' %}selected{% endif %}>Pest</option>
+                    <option value="disease" {% if form.threat_type.value == 'disease' %}selected{% endif %}>Disease</option>
+                </select>
+                {% if form.threat_type.errors %}
+                    {% for error in form.threat_type.errors %}
+                        <div class="form-error">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+                <small class="form-help">Select whether this is a pest (insect/animal) or disease (fungal/bacterial)</small>
+            </div>
+            
+            <!-- Risk Level -->
+            <div class="form-group">
+                <label for="{{ form.risk_level.id_for_label }}">
+                    ⚠️ Risk Level <span class="required-field">*</span>
+                </label>
+                <select name="risk_level" 
+                        class="form-control {% if form.risk_level.errors %}is-invalid{% endif %}"
+                        id="{{ form.risk_level.id_for_label }}"
+                        required>
+                    <option value="">Select risk level...</option>
+                    <option value="low" {% if form.risk_level.value == 'low' %}selected{% endif %}>Low</option>
+                    <option value="moderate" {% if form.risk_level.value == 'moderate' %}selected{% endif %}>Moderate</option>
+                    <option value="high" {% if form.risk_level.value == 'high' %}selected{% endif %}>High</option>
+                </select>
+                {% if form.risk_level.errors %}
+                    {% for error in form.risk_level.errors %}
+                        <div class="form-error">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+                <small class="form-help">How severe is this threat to mango production?</small>
+            </div>
+        </div>
+        
+        <!-- Description Section -->
+        <div class="form-section">
+            <div class="section-title">📝 Description & Details</div>
+            
+            <!-- Short Description -->
+            <div class="form-group">
+                <label for="{{ form.description.id_for_label }}">
+                    📄 Short Description <span class="required-field">*</span>
+                </label>
+                <textarea name="description" 
+                          class="form-control {% if form.description.errors %}is-invalid{% endif %}"
+                          id="{{ form.description.id_for_label }}"
+                          rows="3"
+                          placeholder="Brief description of the threat (1-2 sentences)"
+                          required>{{ form.description.value|default:'' }}</textarea>
+                {% if form.description.errors %}
+                    {% for error in form.description.errors %}
+                        <div class="form-error">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+                <small class="form-help">Brief description (1-2 sentences) - what growers see first</small>
+            </div>
+            
+            <!-- Detailed Information -->
+            <div class="form-group">
+                <label for="{{ form.details.id_for_label }}">
+                    📖 Detailed Information
+                </label>
+                <textarea name="details" 
+                          class="form-control {% if form.details.errors %}is-invalid{% endif %}"
+                          id="{{ form.details.id_for_label }}"
+                          rows="6"
+                          placeholder="Detailed information about the threat, symptoms, treatment, etc.">{{ form.details.value|default:'' }}</textarea>
+                {% if form.details.errors %}
+                    {% for error in form.details.errors %}
+                        <div class="form-error">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+                <small class="form-help">
+                    Comprehensive information including:
+                    <br>• Symptoms and identification
+                    <br>• Life cycle and behavior  
+                    <br>• Prevention and treatment methods
+                    <br>• Economic impact
+                </small>
+            </div>
+        </div>
+        
+        <!-- Image Section -->
+        <div class="form-section">
+            <div class="section-title">📷 Visual Identification</div>
+            
+            <div class="form-group">
+                <label for="{{ form.image.id_for_label }}">
+                    🖼️ Threat Image
+                </label>
+                <input type="file" 
+                       name="image" 
+                       class="form-control {% if form.image.errors %}is-invalid{% endif %}"
+                       id="{{ form.image.id_for_label }}"
+                       accept="image/*">
+                {% if form.image.errors %}
+                    {% for error in form.image.errors %}
+                        <div class="form-error">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+                <small class="form-help">
+                    Upload a clear, high-quality image showing:
+                    <br>• The pest/disease symptoms
+                    <br>• Damage patterns
+                    <br>• Identification features
+                    <br>Supported formats: JPG, PNG, GIF (max 5MB)
+                </small>
+                
+                <!-- Show current image if editing -->
+                {% if object and object.image %}
+                    <div class="current-image">
+                        <p><strong>Current image:</strong></p>
+                        <img src="{{ object.image.url }}" alt="{{ object.name }}">
+                        <br><small class="text-muted">Upload a new image to replace this one</small>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="form-group" style="text-align: center; margin-top: 30px;">
+            <button type="submit" class="btn btn-submit" id="submitBtn">
+                {% if object %}
+                    💾 Update Threat
+                {% else %}
+                    ➕ Create Threat  
+                {% endif %}
+                <span class="loading-spinner" id="loadingSpinner"></span>
+            </button>
+            
+            <a href="{% url 'crud_dashboard' %}" class="btn btn-back">
+                ← Back to Dashboard
+            </a>
+        </div>
+        
+        <!-- Help Text -->
+        <div style="margin-top: 20px; padding: 15px; background: #e8f4fd; border-radius: 8px; border-left: 4px solid #3498db;">
+            <p><strong>💡 Tips for creating good threat entries:</strong></p>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Use clear, descriptive names that growers will recognize</li>
+                <li>Include both common and scientific names when possible</li>
+                <li>Focus on practical identification and management information</li>
+                <li>Use high-quality images that clearly show the threat</li>
+                <li>Set appropriate risk levels based on economic impact</li>
+            </ul>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('threatForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const loadingSpinner = document.getElementById('loadingSpinner');
     
-    <a href="{% url 'crud_dashboard' %}" class="btn btn-back" style="margin-left: 1rem;">
-      ← Back to Dashboard
-    </a>
-  </div>
+    // Add character counter for description
+    const descriptionField = document.querySelector('textarea[name="description"]');
+    if (descriptionField) {
+        const counter = document.createElement('div');
+        counter.style.color = '#7f8c8d';
+        counter.style.fontSize = '12px';
+        counter.style.textAlign = 'right';
+        counter.style.marginTop = '5px';
+        descriptionField.parentNode.appendChild(counter);
+        
+        function updateCounter() {
+            const length = descriptionField.value.length;
+            counter.textContent = `${length} characters`;
+            
+            if (length < 10) {
+                counter.style.color = '#e74c3c';
+                counter.textContent += ' (minimum 10 characters required)';
+            } else if (length > 200) {
+                counter.style.color = '#f39c12';
+                counter.textContent += ' (getting long)';
+            } else {
+                counter.style.color = '#27ae60';
+                counter.textContent += ' (good length)';
+            }
+        }
+        
+        descriptionField.addEventListener('input', updateCounter);
+        updateCounter(); // Initial count
+    }
+    
+    // Enhanced form validation
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        const errors = [];
+        
+        // Clear previous validation states
+        document.querySelectorAll('.form-control').forEach(field => {
+            field.classList.remove('is-invalid');
+        });
+        
+        // Validate name
+        const nameField = form.querySelector('[name="name"]');
+        if (!nameField.value.trim()) {
+            nameField.classList.add('is-invalid');
+            errors.push('Threat name is required');
+            isValid = false;
+        } else if (nameField.value.trim().length < 3) {
+            nameField.classList.add('is-invalid');
+            errors.push('Threat name must be at least 3 characters long');
+            isValid = false;
+        }
+        
+        // Validate threat type
+        const threatTypeField = form.querySelector('[name="threat_type"]');
+        if (!threatTypeField.value) {
+            threatTypeField.classList.add('is-invalid');
+            errors.push('Please select a threat type');
+            isValid = false;
+        }
+        
+        // Validate risk level
+        const riskLevelField = form.querySelector('[name="risk_level"]');
+        if (!riskLevelField.value) {
+            riskLevelField.classList.add('is-invalid');
+            errors.push('Please select a risk level');
+            isValid = false;
+        }
+        
+        // Validate description
+        const descField = form.querySelector('[name="description"]');
+        if (!descField.value.trim()) {
+            descField.classList.add('is-invalid');
+            errors.push('Description is required');
+            isValid = false;
+        } else if (descField.value.trim().length < 10) {
+            descField.classList.add('is-invalid');
+            errors.push('Description must be at least 10 characters long');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            
+            // Show error summary
+            let errorHtml = '<div class="alert alert-danger"><strong>Please fix the following errors:</strong><ul>';
+            errors.forEach(error => {
+                errorHtml += `<li>${error}</li>`;
+            });
+            errorHtml += '</ul></div>';
+            
+            // Insert error summary at the top of the form
+            const existingAlert = document.querySelector('.alert-danger');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+            
+            form.insertAdjacentHTML('afterbegin', errorHtml);
+            
+            // Scroll to top to show errors
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            return false;
+        }
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        loadingSpinner.style.display = 'inline-block';
+        submitBtn.innerHTML = submitBtn.innerHTML.replace('Create Threat', 'Creating...').replace('Update Threat', 'Updating...');
+    });
+    
+    // Real-time validation feedback
+    const inputs = document.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.hasAttribute('required') && !this.value.trim()) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+        
+        // Remove invalid state when user starts typing
+        input.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid') && this.value.trim()) {
+                this.classList.remove('is-invalid');
+            }
+        });
+    });
+    
+    // Auto-save draft functionality (optional)
+    let autoSaveTimer;
+    inputs.forEach(input => {
+        if (input.type !== 'file') {
+            input.addEventListener('input', function() {
+                clearTimeout(autoSaveTimer);
+                autoSaveTimer = setTimeout(function() {
+                    console.log('Auto-saving draft...');
+                    // Could implement localStorage draft saving here
+                }, 2000);
+            });
+        }
+    });
+});
+</script>
 {% endblock %}

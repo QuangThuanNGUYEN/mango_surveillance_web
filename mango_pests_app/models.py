@@ -48,7 +48,7 @@ class Location(models.Model):
     description = models.TextField(null=True, blank=True)
     grower = models.ForeignKey(Grower, on_delete=models.CASCADE, related_name="locations", null=True, blank=True)
     
-    # Enhanced location data
+    # Location data
     gps_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     gps_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     area_hectares = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
@@ -154,7 +154,6 @@ class MangoTree(models.Model):
         return round(total_time, 1)
 
 class MangoThreat(models.Model):
-    """Mango pests and diseases database"""
     THREAT_TYPES = [
         ('pest', 'Pest'),
         ('disease', 'Disease'),
@@ -170,8 +169,7 @@ class MangoThreat(models.Model):
     slug = models.SlugField(max_length=120, unique=True, blank=True)
     description = models.TextField()
     details = models.TextField()
-    image = models.ImageField(upload_to='threat_images/', null=True, blank=True, 
-                             help_text="Upload an image of this threat")
+    image = models.ImageField(upload_to='threat_images/', null=True, blank=True)
     threat_type = models.CharField(max_length=10, choices=THREAT_TYPES)
     risk_level = models.CharField(max_length=10, choices=RISK_LEVELS, default='moderate')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -182,14 +180,26 @@ class MangoThreat(models.Model):
         
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.name)
+            from django.utils.text import slugify
+            base_slug = slugify(self.name)
+            slug = base_slug
+            counter = 1
+            
+            # Ensure unique slug - this prevents duplicate slug errors
+            while MangoThreat.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            
+            self.slug = slug
         super().save(*args, **kwargs)
     
     def get_absolute_url(self):
+        from django.urls import reverse
         return reverse('threat_details', kwargs={'threat_name': self.slug})
     
     def __str__(self):
         return f"{self.name} ({self.get_threat_type_display()})"
+
 
 class SurveillancePlan(models.Model):
     """Master surveillance plan for grower's property"""
@@ -295,57 +305,3 @@ class TreeInspection(models.Model):
     def __str__(self):
         return f"Inspection of {self.tree} on {self.surveillance_record.date}"
 
-# Legacy models for backward compatibility
-class Pest(models.Model):
-    name = models.CharField(max_length=100)
-    description = models.TextField()
-    risk_level = models.CharField(max_length=50, choices=[('Low', 'Low'), ('Moderate', 'Moderate'), ('High', 'High')])
-
-    def __str__(self):
-        return f"{self.name} - Risk: {self.risk_level}"
-
-class Disease(models.Model):
-    name = models.CharField(max_length=100)
-    description = models.TextField()
-    risk_level = models.CharField(max_length=50, choices=[('Low', 'Low'), ('Moderate', 'Moderate'), ('High', 'High')])
-
-    def __str__(self):
-        return f"{self.name} - Risk: {self.risk_level}"
-
-class Inspection(models.Model):
-    record = models.ForeignKey(SurveillanceRecord, on_delete=models.CASCADE, related_name="inspections")
-    tree = models.ForeignKey(MangoTree, on_delete=models.CASCADE, related_name="old_inspections")
-    threat = models.ForeignKey(MangoThreat, null=True, blank=True, on_delete=models.SET_NULL)
-    pest = models.ForeignKey(Pest, null=True, blank=True, on_delete=models.SET_NULL)
-    disease = models.ForeignKey(Disease, null=True, blank=True, on_delete=models.SET_NULL)
-    status = models.CharField(max_length=50, choices=[('Found', 'Found'), ('Controlled', 'Controlled'), ('Escalated', 'Escalated')])
-    severity = models.CharField(max_length=50, choices=[('Low', 'Low'), ('Moderate', 'Moderate'), ('High', 'High')])
-    findings = models.TextField(null=True, blank=True)
-
-    def __str__(self):
-        details = []
-        if self.threat:
-            details.append(f"Threat: {self.threat}")
-        if self.pest:
-            details.append(f"Pest: {self.pest}")
-        if self.disease:
-            details.append(f"Disease: {self.disease}")
-        return f"Inspection of {self.tree} - {' | '.join(details)}"
-
-    def risk_assessment(self):
-        risk_map = {'Low': 1, 'Moderate': 2, 'High': 3}
-        
-        if self.threat:
-            threat_risk = risk_map.get(self.threat.risk_level.title(), 0)
-            return ['Low', 'Moderate', 'High'][min(threat_risk - 1, 2)] if threat_risk > 0 else 'Low'
-        
-        pest_risk = risk_map.get(self.pest.risk_level, 0) if self.pest else 0
-        disease_risk = risk_map.get(self.disease.risk_level, 0) if self.disease else 0
-        total_risk = pest_risk + disease_risk
-        
-        if total_risk <= 2:
-            return "Low"
-        elif total_risk == 3:
-            return "Moderate"
-        else:
-            return "High"
