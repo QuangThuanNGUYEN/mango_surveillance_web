@@ -1,10 +1,14 @@
-# mango_surveillance_web
-## References
+# 🥭 Django Mango Surveillance System - Setup Guide
 
-- [Django Class-Based Views – Official Documentation](https://docs.djangoproject.com/en/5.2/topics/class-based-views/intro/)
-- [Pagination with Django and Bootstrap 5 Tutorial](https://dev.to/brylie/pagination-with-django-and-bootstrap-5-2bj3)
-- [When and How to Use Django TemplateView](https://www.agiliq.com/blog/2017/12/when-and-how-use-django-templateview/)
+## **Project Overview**
+A comprehensive Django-based agricultural surveillance system for mango growers featuring intelligent surveillance calculations, advanced analytics, and user data isolation.
 
-- [How to Paginate with Django](https://simpleisbetterthancomplex.com/tutorial/2016/08/03/how-to-paginate-with-django.html)
-- [Learn Django Class-Based Views - Using TemplateView - theory and examples](https://www.youtube.com/watch?v=GxA2I-n8NR8)
-- [Pagination - Django document](https://docs.djangoproject.com/en/5.2/topics/pagination/)
+pip install requirements.txt
+
+Create a user with username 'grower' first to populate data
+
+# Reset database if needed
+rm db.sqlite3
+python manage.py migrate
+python manage.py shell < populate_data.py
+

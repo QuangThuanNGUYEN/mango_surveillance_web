@@ -1105,27 +1105,27 @@ class SurveillanceRecordCreateView(LoginRequiredMixin, CreateView):
             form.instance.total_time_minutes = total_time_minutes
         
         # Enhance notes with additional findings
-        enhanced_notes = form.instance.notes or ""
+        notes = form.instance.notes or ""
         if specific_findings:
-            enhanced_notes += f"\n\n--- THREAT FINDINGS ---\n{specific_findings}"
+            notes += f"\n\n--- THREAT FINDINGS ---\n{specific_findings}"
         if action_taken:
-            enhanced_notes += f"\n\n--- ACTIONS TAKEN ---\n{action_taken}"
+            notes += f"\n\n--- ACTIONS TAKEN ---\n{action_taken}"
         if requires_followup or requires_treatment:
-            enhanced_notes += f"\n\n--- FOLLOW-UP REQUIRED ---"
+            notes += f"\n\n--- FOLLOW-UP REQUIRED ---"
             if requires_followup:
-                enhanced_notes += f"\n• Follow-up surveillance needed"
+                notes += f"\n• Follow-up surveillance needed"
             if requires_treatment:
-                enhanced_notes += f"\n• Treatment/intervention required"
+                notes += f"\n• Treatment/intervention required"
             if followup_date:
-                enhanced_notes += f"\n• Recommended date: {followup_date}"
+                notes += f"\n• Recommended date: {followup_date}"
         
-        form.instance.notes = enhanced_notes
+        form.instance.notes = notes
         
         # Save the surveillance record
         surveillance_record = form.save()
         
         # Create detailed tree inspections
-        threats_summary = self.create_enhanced_tree_inspections(surveillance_record, plant_parts, threats_found)
+        threats_summary = self.create_tree_inspections(surveillance_record, plant_parts, threats_found)
         
         # Create success message with threat summary
         if total_time_minutes:
@@ -1147,7 +1147,7 @@ class SurveillanceRecordCreateView(LoginRequiredMixin, CreateView):
         
         return super().form_valid(form)
     
-    def create_enhanced_tree_inspections(self, surveillance_record, plant_parts, threats_found):
+    def create_tree_inspections(self, surveillance_record, plant_parts, threats_found):
         """Create detailed tree inspection records with threat associations"""
         try:
             location = surveillance_record.location
@@ -1246,7 +1246,7 @@ class SurveillanceRecordCreateView(LoginRequiredMixin, CreateView):
             return threats_summary
             
         except Exception as e:
-            print(f"Error in create_enhanced_tree_inspections: {e}")
+            print(f"Error in create_tree_inspections: {e}")
             return []
     
     def get_form(self, form_class=None):
