@@ -57,7 +57,7 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['heading'] = "Welcome to the World Mango Organisation of Group 28 of HIT237!"
+        context['heading'] = "Welcome to the World Mango Organisation"
         context['description'] = "We are dedicated to combating mango pests and diseases through research and awareness."
         
         # Statistics
